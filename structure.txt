@@ -1,0 +1,231 @@
+Folder PATH listing
+Volume serial number is C46E-AD08
+C:\USERS\ENG CHANDA\DESKTOP\FPI\SRC
+¦   App.css
+¦   App.test.tsx
+¦   App.tsx
+¦   index.css
+¦   index.tsx
+¦   logo.svg
+¦   react-app-env.d.ts
+¦   reportWebVitals.ts
+¦   setupTests.ts
+¦   
++---components
+¦   ¦   PageWrapper.tsx
+¦   ¦   ScrollToTop.tsx
+¦   ¦   
+¦   +---admin
+¦   ¦   ¦   AdminLayout.tsx
+¦   ¦   ¦   Badge.tsx
+¦   ¦   ¦   EmptyState.tsx
+¦   ¦   ¦   FileUpload.tsx
+¦   ¦   ¦   Header.tsx
+¦   ¦   ¦   ImageUpload.tsx
+¦   ¦   ¦   index.ts
+¦   ¦   ¦   Input.tsx
+¦   ¦   ¦   Loading.tsx
+¦   ¦   ¦   MediaCard.tsx
+¦   ¦   ¦   MediaPreview.tsx
+¦   ¦   ¦   MediaToolbar.tsx
+¦   ¦   ¦   PageCard.tsx
+¦   ¦   ¦   PageHeader.tsx
+¦   ¦   ¦   PrimaryButton.tsx
+¦   ¦   ¦   ProtectedRoute.tsx
+¦   ¦   ¦   SecondaryButton.tsx
+¦   ¦   ¦   SectionTitle.tsx
+¦   ¦   ¦   Select.tsx
+¦   ¦   ¦   Sidebar.tsx
+¦   ¦   ¦   StatCard.tsx
+¦   ¦   ¦   TextArea.tsx
+¦   ¦   ¦   Toggle.tsx
+¦   ¦   ¦   
+¦   ¦   +---activity
+¦   ¦   ¦       ActivityForm.tsx
+¦   ¦   ¦       ActivityImagePicker.tsx
+¦   ¦   ¦       CategorySelect.tsx
+¦   ¦   ¦       DatePicker.tsx
+¦   ¦   ¦       ProgramSelect.tsx
+¦   ¦   ¦       ProvinceSelect.tsx
+¦   ¦   ¦       PublishSwitch.tsx
+¦   ¦   ¦       
+¦   ¦   +---common
+¦   ¦   ¦       DataTable.tsx
+¦   ¦   ¦       DeleteDialog.tsx
+¦   ¦   ¦       SearchBar.tsx
+¦   ¦   ¦       StatusBadge.tsx
+¦   ¦   ¦       
+¦   ¦   +---dashboard
+¦   ¦   +---document
+¦   ¦   ¦       DocumentCategorySelect.tsx
+¦   ¦   ¦       DocumentForm.tsx
+¦   ¦   ¦       DocumentUpload.tsx
+¦   ¦   ¦       PublishSwitch.tsx
+¦   ¦   ¦       
+¦   ¦   +---homepage
+¦   ¦   ¦       AboutEditor.tsx
+¦   ¦   ¦       CTAEditor.tsx
+¦   ¦   ¦       HeroEditor.tsx
+¦   ¦   ¦       HomepageEditor.tsx
+¦   ¦   ¦       SectionTabs.tsx
+¦   ¦   ¦       StatisticsEditor.tsx
+¦   ¦   ¦       WelcomeEditor.tsx
+¦   ¦   ¦       
+¦   ¦   +---layout
+¦   ¦   +---project
+¦   ¦   ¦       ProjectCategorySelect.tsx
+¦   ¦   ¦       ProjectForm.tsx
+¦   ¦   ¦       ProjectImagePicker.tsx
+¦   ¦   ¦       ProjectStatusSelect.tsx
+¦   ¦   ¦       PublishSwitch.tsx
+¦   ¦   ¦       
+¦   ¦   +---team
+¦   ¦           CategorySelect.tsx
+¦   ¦           PublishSwitch.tsx
+¦   ¦           ResponsibilitiesEditor.tsx
+¦   ¦           TeamForm.tsx
+¦   ¦           TeamImagePicker.tsx
+¦   ¦           
+¦   +---home
+¦   ¦       About.tsx
+¦   ¦       ActivitiesCarousel.tsx
+¦   ¦       FocusAreas.tsx
+¦   ¦       Gallery.tsx
+¦   ¦       Hero.tsx
+¦   ¦       HeroCarousel.tsx
+¦   ¦       MediaSection.tsx
+¦   ¦       QuickAccess.tsx
+¦   ¦       RecentActivities.tsx
+¦   ¦       StatsSection.tsx
+¦   ¦       Welcome.tsx
+¦   ¦       
+¦   +---layout
+¦           Footer.tsx
+¦           Navbar.tsx
+¦           
++---constants
+¦       homepage.ts
+¦       
++---data
+¦       radioSpots.ts
+¦       
++---hooks
+¦       useScrollReveal.ts
+¦       
++---pages
+¦   ¦   ActivityDetail.tsx
+¦   ¦   Home.tsx
+¦   ¦   
+¦   +---about
+¦   ¦       AboutUs.tsx
+¦   ¦       
+¦   +---admin
+¦   ¦   ¦   Activities.tsx
+¦   ¦   ¦   CreateActivity.tsx
+¦   ¦   ¦   CreateHub.tsx
+¦   ¦   ¦   CreateNewsletter.tsx
+¦   ¦   ¦   CreatePressStatement.tsx
+¦   ¦   ¦   CreateProject.tsx
+¦   ¦   ¦   CreatePublication.tsx
+¦   ¦   ¦   CreateRadioSpot.tsx
+¦   ¦   ¦   CreateReport.tsx
+¦   ¦   ¦   CreateTeam.tsx
+¦   ¦   ¦   Dashboard.tsx
+¦   ¦   ¦   EditActivity.tsx
+¦   ¦   ¦   EditHub.tsx
+¦   ¦   ¦   EditNewsletter.tsx
+¦   ¦   ¦   EditPressStatement.tsx
+¦   ¦   ¦   EditProject.tsx
+¦   ¦   ¦   EditPublication.tsx
+¦   ¦   ¦   EditRadioSpot.tsx
+¦   ¦   ¦   EditReport.tsx
+¦   ¦   ¦   EditTeam.tsx
+¦   ¦   ¦   Homepage.tsx
+¦   ¦   ¦   Hubs.tsx
+¦   ¦   ¦   Login.tsx
+¦   ¦   ¦   Newsletters.tsx
+¦   ¦   ¦   Projects.tsx
+¦   ¦   ¦   Provinces.tsx
+¦   ¦   ¦   RadioSpots.tsx
+¦   ¦   ¦   Report.tsx
+¦   ¦   ¦   TeamMembers.tsx
+¦   ¦   ¦   
+¦   ¦   +---media
+¦   ¦           EditMedia.tsx
+¦   ¦           MediaLibrary.tsx
+¦   ¦           UploadMedia.tsx
+¦   ¦           
+¦   +---contact
+¦   ¦       Contact.tsx
+¦   ¦       
+¦   +---knowledge
+¦   ¦       Newsletters.tsx
+¦   ¦       PressStatments.tsx
+¦   ¦       Publications.tsx
+¦   ¦       Reports.tsx
+¦   ¦       
+¦   +---mil
+¦   ¦   ¦   AboutMIL.tsx
+¦   ¦   ¦   Brochure.tsx
+¦   ¦   ¦   Hubs.tsx
+¦   ¦   ¦   RadioSpots.tsx
+¦   ¦   ¦   
+¦   ¦   +---Hubs
+¦   ¦           CopperbeltHubs.tsx
+¦   ¦           EasternHubs.tsx
+¦   ¦           HubDetail.tsx
+¦   ¦           LusakaHubs.tsx
+¦   ¦           ProvinceHubs.tsx
+¦   ¦           SouthernHubs.tsx
+¦   ¦           
+¦   +---partners
+¦   ¦       Partners.tsx
+¦   ¦       unesco.jpg
+¦   ¦       
+¦   +---programs
+¦   ¦       Advocacy.tsx
+¦   ¦       CapacityBuilding.tsx
+¦   ¦       MediaLiteracy.tsx
+¦   ¦       Research.tsx
+¦   ¦       
+¦   +---Projects
+¦   ¦       ClaimYourSpace.tsx
+¦   ¦       ConflictSensitiveJournalism.tsx
+¦   ¦       Funsani.tsx
+¦   ¦       ProjectDetail.tsx
+¦   ¦       SheRise.tsx
+¦   ¦       
+¦   +---resources
+¦   ¦       Resources.tsx
+¦   ¦       
+¦   +---sponsors
+¦   ¦       Sponsors.tsx
+¦   ¦       
+¦   +---team
+¦           Team.tsx
+¦           
++---services
+¦       activityService.ts
+¦       api.ts
+¦       auth.ts
+¦       BaseService.ts
+¦       config.ts
+¦       homepageService.ts
+¦       mediaService.ts
+¦       projectService.ts
+¦       publicationService.ts
+¦       radioSpotService.ts
+¦       teamService.ts
+¦       
++---types
+¦       activity.ts
+¦       home.ts
+¦       homepage.ts
+¦       media.ts
+¦       project.ts
+¦       team.ts
+¦       
++---utils
+        formatDate.ts
+        formatSize.ts
+        

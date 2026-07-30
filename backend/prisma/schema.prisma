@@ -1,0 +1,438 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Activity {
+  id           Int      @id @default(autoincrement())
+
+  title        String
+  description  String
+  content      String
+
+  image        String
+
+  program      String?
+  category     String
+
+  location     String
+
+  participants Int
+
+  date         DateTime
+
+  published    Boolean  @default(true)
+
+  images       String[] @default([])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Report {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+  fileUrl     String
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Newsletter {
+  id        Int      @id @default(autoincrement())
+  title     String
+  fileUrl   String
+  createdAt DateTime @default(now())
+}
+
+model TeamMember {
+  id               Int      @id @default(autoincrement())
+
+  fullName         String
+  position         String
+  category         String
+
+  biography        String   @db.Text
+  responsibilities Json
+
+  image            String?
+
+  displayOrder     Int      @default(0)
+  published        Boolean  @default(true)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String
+  content     String
+
+  image       String?
+
+  category    String?
+  status      String?
+
+  startDate   DateTime?
+  endDate     DateTime?
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  featured Boolean @default(false)
+
+  images   String[] @default([])
+}
+
+model Province {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+
+  createdAt DateTime @default(now())
+
+  hubs      Hub[]
+}
+
+model Hub {
+  id            Int      @id @default(autoincrement())
+
+  name          String
+  slug          String   @unique
+
+  location      String?
+  coordinator   String?
+
+  participants  Int      @default(0)
+
+  description   String?
+
+  image         String?
+
+  published     Boolean  @default(true)
+
+  provinceId    Int
+  province      Province @relation(fields: [provinceId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  photos        HubPhoto[]
+  events        HubEvent[]
+}
+
+model HubPhoto {
+  id         Int      @id @default(autoincrement())
+
+  imageUrl   String
+  caption    String?
+
+  hubId       Int
+  hub         Hub @relation(fields: [hubId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
+
+model HubEvent {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  eventDate   DateTime
+
+  hubId       Int
+  hub         Hub @relation(fields: [hubId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
+
+model Media {
+
+  id            Int @id @default(autoincrement())
+
+  filename      String
+
+  originalName  String
+
+  url           String
+
+  mimeType      String
+
+  size          Int
+
+  width         Int?
+
+  height        Int?
+
+  alt           String?
+
+  caption       String?
+
+  description   String?
+
+  folder        String? @default("General")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Publication {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  fileUrl     String
+  image       String?
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PressStatement {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  fileUrl     String
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+model RadioSpot {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  station     String
+  duration    String?
+  image       String?
+  audioUrl    String?
+  published   Boolean  @default(true)
+  broadcastAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  featured Boolean @default(false)
+}
+
+model HomepageSection {
+  id         Int      @id @default(autoincrement())
+  section    String   @unique
+  data       Json
+  published  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+
+  fullName  String
+
+  email     String   @unique
+
+  password  String
+
+  role      String   @default("admin")
+
+  active    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  resetTokens PasswordResetToken[]
+}
+
+model SiteSettings {
+  id              Int      @id @default(autoincrement())
+
+  organisation    String   @default("Free Press Initiative Zambia")
+  mission         String?
+  vision          String?
+
+  email           String?
+  phone           String?
+  address         String?
+
+  logo            String?
+  favicon         String?
+
+  facebook        String?
+  twitter         String?
+  instagram       String?
+  youtube         String?
+  linkedin        String?
+
+  seoTitle        String?
+  seoDescription  String?
+
+  footerText      String?
+  copyrightText   String?
+  analyticsId     String?
+
+  maintenanceMode Boolean  @default(false)
+
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPassword    String?
+  smtpFromEmail   String?
+  smtpFromName    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+}
+model Partner {
+  id          Int      @id @default(autoincrement())
+
+  name        String
+  description String?
+  logo        String?
+  website     String?
+  category    String?  @default("Partner")
+
+  displayOrder Int     @default(0)
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Donor {
+  id          Int      @id @default(autoincrement())
+
+  name        String
+  description String?
+  logo        String?
+  website     String?
+  tier        String?  @default("Supporter")
+
+  displayOrder Int     @default(0)
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Resource {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+  fileUrl     String?
+  link        String?
+  category    String?  @default("Resource")
+  thumbnail   String?
+
+  displayOrder Int     @default(0)
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Brochure {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+  fileUrl     String
+  thumbnail   String?
+
+  displayOrder Int     @default(0)
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id          Int      @id @default(autoincrement())
+
+  name        String
+  role        String?
+  message     String
+  photo       String?
+  rating      Int?     @default(5)
+
+  approved    Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Subscriber {
+  id          Int      @id @default(autoincrement())
+
+  email       String   @unique
+  name        String?
+
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+}
+
+model ContactMessage {
+  id          Int      @id @default(autoincrement())
+
+  name        String
+  email       String
+  subject     String?
+  message     String
+
+  read        Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+}
+
+model ProgramContent {
+  id          Int      @id @default(autoincrement())
+
+  slug        String   @unique
+
+  title       String
+  subtitle    String?
+  heroImage   String?
+  intro       String?
+
+  // Flexible content blocks stored as JSON (headings + paragraphs + images)
+  sections    Json?
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

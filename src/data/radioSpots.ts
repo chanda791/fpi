@@ -1,0 +1,38 @@
+export const radioSpots = [
+  {
+    id: 1,
+    title: "FPI Zambia Radio Spot 01",
+    station: "FPI Zambia",
+    date: "2026",
+    duration: "1:00",
+    thumbnail: "https://img.youtube.com/vi/TgCUK9BprvI/maxresdefault.jpg",
+    youtube: "https://www.youtube.com/embed/TgCUK9BprvI",
+  },
+  {
+    id: 2,
+    title: "FPI Zambia Radio Spot 02",
+    station: "FPI Zambia",
+    date: "2026",
+    duration: "1:00",
+    thumbnail: "https://img.youtube.com/vi/XDffqk3HA3Y/maxresdefault.jpg",
+    youtube: "https://www.youtube.com/embed/XDffqk3HA3Y",
+  },
+  {
+    id: 3,
+    title: "FPI Zambia Radio Spot 03",
+    station: "FPI Zambia",
+    date: "2026",
+    duration: "1:00",
+    thumbnail: "https://img.youtube.com/vi/FiWRO9zUuFw/maxresdefault.jpg",
+    youtube: "https://www.youtube.com/embed/FiWRO9zUuFw",
+  },
+  {
+    id: 4,
+    title: "FPI Zambia Radio Spot 04",
+    station: "FPI Zambia",
+    date: "2026",
+    duration: "1:00",
+    thumbnail: "https://img.youtube.com/vi/RRSKPbO0twM/maxresdefault.jpg",
+    youtube: "https://www.youtube.com/embed/RRSKPbO0twM",
+  },
+];
