@@ -146,3 +146,4 @@ Backend:
 - Change `JWT_SECRET` and `ADMIN_PASSWORD` before production.
 - Restrict `CORS_ORIGIN` to the real frontend domain in production.
 "# fpi" 
+"# fpi" 
