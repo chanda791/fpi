@@ -1,30 +1,15 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 
+// Legacy path: still resolved (and still served statically in server.ts) so
+// files uploaded before the Cloudinary cutover keep working, but nothing
+// writes new files here anymore -- uploads now go straight to Cloudinary
+// via an in-memory buffer (see routes/media.ts).
 export const uploadPath = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.resolve(process.cwd(), "src", "uploads");
 
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadPath);
-  },
-
-  filename: (_req, file, cb) => {
-    const uniqueName =
-      Date.now() +
-      "-" +
-      Math.round(Math.random() * 1e9) +
-      path.extname(file.originalname);
-
-    cb(null, uniqueName);
-  },
-});
+const storage = multer.memoryStorage();
 
 const fileFilter: multer.Options["fileFilter"] = (
   _req,

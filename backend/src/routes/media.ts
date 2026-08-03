@@ -1,14 +1,36 @@
 import { Router } from "express";
+import { Readable } from "stream";
+import type { UploadApiOptions, UploadApiResponse } from "cloudinary";
 import { prisma } from "../lib/prisma";
 import { upload } from "../middleware/upload";
+import { cloudinary } from "../lib/cloudinary";
 
 const router = Router();
-const appBaseUrl = process.env.APP_BASE_URL || "";
 
-function mediaUrl(filename: string) {
-  const relativeUrl = `/uploads/${filename}`;
+// Images use Cloudinary's "image" pipeline; audio and (unused today) video
+// use "video", which is Cloudinary's category for all non-image media;
+// everything else (PDF, Word docs) is uploaded as "raw".
+function resourceTypeFor(mimeType: string): "image" | "video" | "raw" {
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("audio/") || mimeType.startsWith("video/")) return "video";
+  return "raw";
+}
 
-  return appBaseUrl ? `${appBaseUrl}${relativeUrl}` : relativeUrl;
+function uploadBufferToCloudinary(
+  buffer: Buffer,
+  options: UploadApiOptions
+): Promise<UploadApiResponse> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error || !result) {
+        return reject(error || new Error("Cloudinary upload failed"));
+      }
+
+      resolve(result);
+    });
+
+    Readable.from(buffer).pipe(uploadStream);
+  });
 }
 
 /**
@@ -73,14 +95,19 @@ router.post(
         });
       }
 
+      const result = await uploadBufferToCloudinary(req.file.buffer, {
+        folder: "fpi-zambia",
+        resource_type: resourceTypeFor(req.file.mimetype),
+      });
+
       const media = await prisma.media.create({
         data: {
-          filename: req.file.filename,
+          filename: result.public_id,
           originalName:
             req.body.originalName ||
             req.file.originalname,
 
-          url: mediaUrl(req.file.filename),
+          url: result.secure_url,
 
           mimeType: req.file.mimetype,
 
