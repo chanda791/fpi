@@ -49,6 +49,7 @@ const Team = () => {
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: `url("/images/hero-bg-1.jpg")`,
+              backgroundAttachment: "fixed",
             }}
           />
           {/* Dark overlay – slightly lighter to show image */}
@@ -144,13 +145,13 @@ const Team = () => {
       {/* Hero‑only styles: full viewport & fixed background */}
       <style>{`
         .team-hero-fixed section {
-          min-height: 60vh !important;
-          height: 60vh !important;
+          min-height: 100vh !important;
+          height: 100vh !important;
         }
         @media (max-width: 480px) {
           .team-hero-fixed section {
-            min-height: 60vh !important;
-            height: 60vh !important;
+            min-height: 100vh !important;
+            height: 100vh !important;
           }
         }
       `}</style>
