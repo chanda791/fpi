@@ -156,7 +156,7 @@ const Home = () => {
       link: "/programs/media-literacy",
     },
     {
-      image: "/images/law1.jpg",
+      image: "/images/note3.jpg",
       eyebrow: "FPI Zambia",
       title: "Advocacy & Policy",
       highlight: "Change the Narrative",
