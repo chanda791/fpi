@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL, getAssetUrl } from "../../services/config";
+import { getAssetUrl } from "../../services/config";
 import ProgramSections from "../../components/programs/ProgramSections";
+import { useProgramContent } from "../../hooks/useProgramContent";
 import {
   GraduationCap,
   Users,
@@ -159,14 +160,7 @@ const GradText = ({ children }: { children: React.ReactNode }) => (
 // MAIN COMPONENT
 // ============================================================
 const CapacityBuilding = () => {
-  const [cms, setCms] = useState<any>(null);
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/program-content/capacity-building`)
-      .then((res) => res.json())
-      .then((data) => setCms(data))
-      .catch((err) => console.error(err));
-  }, []);
+  const cms = useProgramContent("capacity-building");
 
   const heroImage = cms?.heroImage ? getAssetUrl(cms.heroImage) : capacityData.hero.backgroundImage;
   const heroSubtitle = cms?.intro || cms?.subtitle || capacityData.hero.subtitle;

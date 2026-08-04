@@ -11,8 +11,9 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL, getAssetUrl } from "../../services/config";
+import { getAssetUrl } from "../../services/config";
 import ProgramSections from "../../components/programs/ProgramSections";
+import { useProgramContent } from "../../hooks/useProgramContent";
 
 // ============================================================
 // DATA CONFIGURATION – all content can be replaced from admin
@@ -223,14 +224,7 @@ const GradText = ({ children }: { children: React.ReactNode }) => (
 // MAIN COMPONENT
 // ============================================================
 const Advocacy = () => {
-  const [cms, setCms] = useState<any>(null);
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/program-content/advocacy`)
-      .then((res) => res.json())
-      .then((data) => setCms(data))
-      .catch((err) => console.error(err));
-  }, []);
+  const cms = useProgramContent("advocacy");
 
   const heroImage = cms?.heroImage
     ? getAssetUrl(cms.heroImage)

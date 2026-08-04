@@ -8,8 +8,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL, getAssetUrl } from "../../services/config";
+import { getAssetUrl } from "../../services/config";
 import ProgramSections from "../../components/programs/ProgramSections";
+import { useProgramContent } from "../../hooks/useProgramContent";
 
 // ============================================================
 // DATA CONFIGURATION – all content can be replaced from admin
@@ -158,14 +159,7 @@ const GradText = ({ children }: { children: React.ReactNode }) => (
 // MAIN COMPONENT
 // ============================================================
 const MediaLiteracy = () => {
-  const [cms, setCms] = useState<any>(null);
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/program-content/media-literacy`)
-      .then((res) => res.json())
-      .then((data) => setCms(data))
-      .catch((err) => console.error(err));
-  }, []);
+  const cms = useProgramContent("media-literacy");
 
   const heroImage = cms?.heroImage ? getAssetUrl(cms.heroImage) : mediaLiteracyData.hero.backgroundImage;
   const heroSubtitle = cms?.intro || cms?.subtitle || mediaLiteracyData.hero.subtitle;
