@@ -29,11 +29,6 @@ const contactItems = [
   { icon: <Mail  size={14} />,   text: "prog@fpizambia.org" },
 ];
 
-const stats = [
-  { num: "500+", label: "Journalists" },
-  { num: "13+",  label: "MIL Hubs"   },
-  { num: "10+",  label: "Years"      },
-];
 
 // ─── animation hook (unchanged) ──────────────────────────────────────────────
 function useFadeUp(delay = 0) {
@@ -325,9 +320,6 @@ const Footer = () => {
           </div>
 
           <div className="footer-stat-row" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-            {stats.map((s, i) => (
-              <StatBadge key={s.label} num={s.num} label={s.label} delay={400 + i * 100} />
-            ))}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
