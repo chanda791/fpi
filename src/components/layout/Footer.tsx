@@ -25,8 +25,8 @@ const programs = [
 
 const contactItems = [
   { icon: <MapPin size={14} />,  text: "Lusaka, Zambia"     },
-  { icon: <Phone size={14} />,   text: "+260 XXX XXX XXX"   },
-  { icon: <Mail  size={14} />,   text: "info@fpizambia.org" },
+  { icon: <Phone size={14} />,   text: "+260 954 723 936"   },
+  { icon: <Mail  size={14} />,   text: "prog@fpizambia.org" },
 ];
 
 const stats = [
@@ -421,7 +421,7 @@ const Footer = () => {
           © {new Date().getFullYear()} FPI Zambia. All Rights Reserved.
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.22)" }}>
-          Developed by FPI Media <ArrowRight size={12} />
+          Developed by Clevic <ArrowRight size={12} />
         </div>
       </section>
     </footer>
