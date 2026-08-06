@@ -141,7 +141,7 @@ const Home = () => {
       image: "/images/note.jpg",
       eyebrow: "FPI Zambia",
       title: "Promoting Free Press &",
-      highlight: "Good Journalism",
+      highlight: "Excellence in Journalism",
       subtitle: "Defending Human Rights",
       description: "Empowering journalists and defending media freedom across Zambia.",
       cta: "Learn More",
