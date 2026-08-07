@@ -780,7 +780,7 @@ const Home = () => {
             style={{
               display: "grid",
               gridTemplateColumns:
-                "repeat(auto-fit,minmax(420px,1fr))",
+                "repeat(auto-fit,minmax(min(420px,100%),1fr))",
               gap: 30,
             }}
           >
