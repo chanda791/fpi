@@ -334,7 +334,7 @@ const AboutMIL = () => (
         <div className="flex flex-wrap gap-4">
 
           <a
-            href="https://youtube.com/"
+            href="https://www.youtube.com/results?search_query=fpi+zambia"
             target="_blank"
             rel="noreferrer"
             className="bg-[#C9293A] hover:bg-red-700 text-white px-8 py-4 rounded-xl font-semibold transition"
