@@ -845,7 +845,7 @@ const Home = () => {
                 </p>
 
                 <a
-                  href="https://www.youtube.com/results?search_query=fpi+zambia"
+                  href="https://www.youtube.com/@ZambiaFreepressInitiative"
                   target="_blank"
                   rel="noreferrer"
                   style={{
