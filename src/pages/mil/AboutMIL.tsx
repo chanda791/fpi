@@ -230,21 +230,6 @@ const AboutMIL = () => (
               disinformation and digital challenges while
               promoting informed participation in society.
             </p>
-            {/* STATS */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-2xl p-5 text-center">
-                <h3 className="font-serif text-3xl font-black text-[#C9293A]">13+</h3>
-                <p className="text-gray-500 text-sm">MIL Hubs</p>
-              </div>
-              <div className="bg-gray-50 rounded-2xl p-5 text-center">
-                <h3 className="font-serif text-3xl font-black text-[#C9293A]">100+</h3>
-                <p className="text-gray-500 text-sm">Sessions</p>
-              </div>
-              <div className="bg-gray-50 rounded-2xl p-5 text-center">
-                <h3 className="font-serif text-3xl font-black text-[#C9293A]">4</h3>
-                <p className="text-gray-500 text-sm">Provinces</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -366,7 +351,7 @@ const AboutMIL = () => (
         <div className="absolute inset-0 bg-black/40 rounded-3xl" />
 
         <a
-          href="https://youtube.com/"
+          href="https://www.youtube.com/watch?v=JCEkhLTRqfY&t=22s"
           target="_blank"
           rel="noreferrer"
           className="absolute inset-0 flex items-center justify-center"
