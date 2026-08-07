@@ -21,12 +21,20 @@ type Activity = {
   id: number;
   title: string;
   description: string;
+  content?: string;
   image?: string;
   images?: string[];
   date?: string;
   location?: string;
   participants?: number;
   category?: string;
+};
+
+const formatActivityDate = (date?: string) => {
+  if (!date) return "";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
 };
 
 const ActivityDetail = () => {
@@ -122,7 +130,7 @@ const ActivityDetail = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm sm:text-base">
               <span className="inline-flex items-center gap-2 text-white/85 font-medium">
                 <Calendar size={16} className="text-[#C9A84C] shrink-0" />
-                {activity.date || "Date TBA"}
+                {formatActivityDate(activity.date) || "Date TBA"}
               </span>
               <span className="inline-flex items-center gap-2 text-white/85 font-medium">
                 <MapPin size={16} className="text-[#C9A84C] shrink-0" />
@@ -159,7 +167,7 @@ const ActivityDetail = () => {
                     <Calendar size={18} className="text-[#C9293A] mt-0.5 shrink-0" />
                     <div>
                       <p className="text-gray-500 text-xs uppercase tracking-wide">Date</p>
-                      <p className="font-semibold text-sm sm:text-base">{activity.date || "TBA"}</p>
+                      <p className="font-semibold text-sm sm:text-base">{formatActivityDate(activity.date) || "TBA"}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -186,7 +194,7 @@ const ActivityDetail = () => {
                 About This Activity
               </h2>
               <p className="text-base sm:text-lg leading-relaxed sm:leading-8 text-gray-700 whitespace-pre-line border-l-4 border-[#C9293A]/20 pl-4 sm:pl-6">
-                {activity.description}
+                {activity.content || activity.description}
               </p>
             </div>
           </div>

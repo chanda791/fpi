@@ -47,9 +47,11 @@ const LightSection = ({ children, py = 80, center = false }: { children: React.R
   </section>
 );
 
-const BG = "/images/brochure-hero.jpg";
+const BG = "/images/broc.jpg";
 
-// SIMPLIFIED BgSection - Fixed background image
+// SIMPLIFIED BgSection - Fixed background image, or a plain gradient panel
+// when `photo` is false (used to break up sections that would otherwise all
+// repeat the same hero photograph as you scroll down the page).
 const BgSection = ({
   children,
   overlay = "rgba(10,4,0,0.72)",
@@ -57,6 +59,7 @@ const BgSection = ({
   center = false,
   id = "",
   className = "",
+  photo = true,
 }: {
   children: React.ReactNode;
   overlay?: string;
@@ -64,6 +67,7 @@ const BgSection = ({
   center?: boolean;
   id?: string;
   className?: string;
+  photo?: boolean;
 }) => (
   <section
     id={id}
@@ -77,37 +81,41 @@ const BgSection = ({
       display: "flex",
       alignItems: "center",
       width: "100%",
-      background: "#080C1A",
+      background: photo ? "#080C1A" : overlay,
     }}
   >
-    {/* Background image */}
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundImage: `url(${BG})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        zIndex: 0,
-      }}
-    />
+    {photo && (
+      <>
+        {/* Background image */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `url(${BG})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            zIndex: 0,
+          }}
+        />
 
-    {/* Overlay */}
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: overlay,
-        zIndex: 1,
-      }}
-    />
+        {/* Overlay */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: overlay,
+            zIndex: 1,
+          }}
+        />
+      </>
+    )}
 
     <div
       style={{
@@ -143,14 +151,14 @@ const Brochure = () => {
     ...brochures.map((b) => ({
       title: b.title,
       description: b.description,
-      image: b.thumbnail ? getAssetUrl(b.thumbnail) : "/images/brochure-cover.jpg",
+      image: b.thumbnail ? getAssetUrl(b.thumbnail) : "/images/brochure.jpg",
       file: getAssetUrl(b.fileUrl),
       kind: "Brochure",
     })),
     ...publications.map((p) => ({
       title: p.title,
       description: p.description,
-      image: "/images/brochure-cover.jpg",
+      image: p.image ? getAssetUrl(p.image) : "/images/brochure.jpg",
       file: getAssetUrl(p.fileUrl),
       kind: "Publication",
     })),
@@ -915,7 +923,8 @@ const Brochure = () => {
 
       {/* ══ FEATURED TOPICS ═══════════════════════════════════════ */}
       <BgSection
-        overlay="linear-gradient(160deg,rgba(10,3,0,0.88) 0%,rgba(201,41,58,0.30) 50%,rgba(10,3,0,0.88) 100%)"
+        photo={false}
+        overlay="linear-gradient(160deg,#0A0300 0%,#3A0D14 50%,#0A0300 100%)"
         py={80}
         center
       >
@@ -1012,7 +1021,8 @@ const Brochure = () => {
 
       {/* ═════════════ FINAL CTA ═════════════ */}
       <BgSection
-        overlay="linear-gradient(135deg,rgba(10,3,0,.92),rgba(201,41,58,.55))"
+        photo={false}
+        overlay="linear-gradient(135deg,#1A0500 0%,#C9293A 100%)"
         py={110}
         center
       >

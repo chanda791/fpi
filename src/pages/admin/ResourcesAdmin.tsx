@@ -34,6 +34,8 @@ const ResourcesAdmin = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(empty);
+  const [fileUploading, setFileUploading] = useState(false);
+  const [thumbUploading, setThumbUploading] = useState(false);
 
   const load = async () => {
     try {
@@ -76,6 +78,10 @@ const ResourcesAdmin = () => {
   const save = async () => {
     if (!form.title.trim()) {
       alert("Title is required.");
+      return;
+    }
+    if (fileUploading || thumbUploading) {
+      alert("Please wait for the upload to finish before saving.");
       return;
     }
     try {
@@ -134,13 +140,15 @@ const ResourcesAdmin = () => {
               <TextArea label="Description" name="description" rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} />
               <Input label="Category" name="category" value={form.category} onChange={(e) => update("category", e.target.value)} />
               <Input label="External Link (optional, if not a file)" name="link" value={form.link} onChange={(e) => update("link", e.target.value)} />
-              <FileUpload label="Resource File (PDF, DOC, etc.)" value={form.fileUrl} onChange={(url) => update("fileUrl", url)} />
-              <ImageUpload label="Thumbnail (optional)" value={form.thumbnail} onChange={(url) => update("thumbnail", url)} />
+              <FileUpload label="Resource File (PDF, DOC, etc.)" value={form.fileUrl} onChange={(url) => update("fileUrl", url)} onUploadingChange={setFileUploading} />
+              <ImageUpload label="Thumbnail (optional)" value={form.thumbnail} onChange={(url) => update("thumbnail", url)} onUploadingChange={setThumbUploading} />
               <Input label="Display Order" name="displayOrder" type="number" value={form.displayOrder} onChange={(e) => update("displayOrder", Number(e.target.value))} />
               <Toggle checked={form.published} onChange={(c) => update("published", c)} label="Published" />
 
               <div className="flex gap-3 pt-2">
-                <PrimaryButton onClick={save} disabled={saving}>{saving ? "Saving..." : "Save Resource"}</PrimaryButton>
+                <PrimaryButton onClick={save} disabled={saving || fileUploading || thumbUploading}>
+                  {saving ? "Saving..." : fileUploading || thumbUploading ? "Waiting for upload..." : "Save Resource"}
+                </PrimaryButton>
                 <SecondaryButton onClick={() => setShowForm(false)}>Cancel</SecondaryButton>
               </div>
             </div>

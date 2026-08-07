@@ -6,14 +6,21 @@ interface FileUploadProps {
   label?: string;
   value?: string;
   onChange: (url: string) => void;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 const FileUpload = ({
   label = "Upload File",
   value,
   onChange,
+  onUploadingChange,
 }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
+
+  const setUploadingState = (value: boolean) => {
+    setUploading(value);
+    onUploadingChange?.(value);
+  };
 
   const handleChange = async (
     e: ChangeEvent<HTMLInputElement>
@@ -23,7 +30,7 @@ const FileUpload = ({
     if (!file) return;
 
     try {
-      setUploading(true);
+      setUploadingState(true);
 
       const formData = new FormData();
       formData.append("file", file);
@@ -54,7 +61,7 @@ const FileUpload = ({
       console.error(error);
       alert(error?.message || "Upload failed.");
     } finally {
-      setUploading(false);
+      setUploadingState(false);
     }
   };
 

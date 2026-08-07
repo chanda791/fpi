@@ -11,10 +11,10 @@ const AdminLayout = ({ children }: Props) => {
     <div className="flex bg-slate-100 min-h-screen">
       <Sidebar />
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <Header />
 
-        <main className="p-8">
+        <main className="p-8 overflow-x-auto">
           {children}
         </main>
       </div>

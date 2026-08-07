@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import Input from "../Input";
 import TextArea from "../TextArea";
 import ImageUpload from "../ImageUpload";
@@ -22,6 +24,18 @@ const DocumentForm = ({
   onSubmit,
   showImage = false,
 }: Props) => {
+  const [fileUploading, setFileUploading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const uploading = fileUploading || imageUploading;
+
+  const handleSubmit = () => {
+    if (uploading) {
+      alert("Please wait for the upload to finish before saving.");
+      return;
+    }
+    onSubmit();
+  };
+
   return (
     <div className="space-y-5">
 
@@ -46,6 +60,7 @@ const DocumentForm = ({
         onChange={(url) =>
           update("fileUrl", url)
         }
+        onUploadingChange={setFileUploading}
       />
 
       {showImage && (
@@ -53,6 +68,7 @@ const DocumentForm = ({
           label="Cover Image (optional)"
           value={form.image}
           onChange={(url) => update("image", url)}
+          onUploadingChange={setImageUploading}
         />
       )}
 
@@ -74,11 +90,13 @@ const DocumentForm = ({
       />
 
       <PrimaryButton
-        onClick={onSubmit}
-        disabled={loading}
+        onClick={handleSubmit}
+        disabled={loading || uploading}
       >
         {loading
           ? "Saving..."
+          : uploading
+          ? "Waiting for upload..."
           : "Save Document"}
       </PrimaryButton>
 

@@ -35,7 +35,7 @@ const Sidebar = () => {
     }`;
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen overflow-y-auto">
+    <aside className="w-64 shrink-0 bg-slate-900 text-white min-h-screen overflow-y-auto">
       <div className="p-6 border-b border-slate-800">
         <h1 className="text-2xl font-bold">FPI CMS</h1>
         <p className="text-xs text-slate-400 mt-1">

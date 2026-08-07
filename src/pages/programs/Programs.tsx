@@ -39,11 +39,17 @@ const programs = [
 const Programs = () => {
   return (
     <div className="bg-white">
-      {/* HERO */}
-      <section className="relative min-h-[380px] sm:min-h-[50vh] flex items-center overflow-hidden bg-[#080C1A]">
+      {/* HERO – FIXED BACKGROUND, FULL VIEWPORT */}
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/hero-bg-1.jpg')" }}
+        ></div>
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>
         <div className="absolute top-0 right-0 w-[350px] h-[350px] sm:w-[550px] sm:h-[550px] bg-[#C9293A]/20 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] bg-[#C9A84C]/15 blur-3xl rounded-full pointer-events-none" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center text-white">
           <div className="inline-flex items-center gap-2 mb-6">
             <span className="block w-6 h-[2px] bg-[#E8610A] rounded-full" />
             <span className="text-[11px] sm:text-xs font-bold tracking-[0.16em] uppercase text-white/80">

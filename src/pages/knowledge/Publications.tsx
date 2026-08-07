@@ -27,7 +27,7 @@ const publicationsData = {
     title: "Publications",
     description:
       "Access guides, manuals, policy briefs, toolkits and educational resources developed by FPI Zambia.",
-    backgroundImage: "/images/activity-1.jpg",
+    backgroundImage: "/images/publications.jpg",
     ctaPrimary: { text: "Explore Archive", link: "#archive" },
     ctaSecondary: { text: "Latest Guides", link: "#latest" },
   },

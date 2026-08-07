@@ -26,9 +26,8 @@ const reportsData = {
     title: "Reports & Publications",
     description:
       "Research reports, policy briefs, toolkits and publications produced by FPI Zambia.",
-    backgroundImage: "/images/activity-1.jpg",
+    backgroundImage: "/images/reports.jpg",
     ctaPrimary: { text: "Explore Reports", link: "#reports" },
-    ctaSecondary: { text: "View All Publications", link: "#archive" },
   },
   intro: {
     tag: "Knowledge Resources",
@@ -220,12 +219,6 @@ const Reports = () => {
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-6 py-3 rounded-full font-semibold text-sm hover:-translate-y-1 transition-all duration-300 shadow-lg"
               >
                 {reportsData.hero.ctaPrimary.text}
-              </a>
-              <a
-                href={reportsData.hero.ctaSecondary.link}
-                className="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-white/10 hover:-translate-y-1 transition-all duration-300"
-              >
-                {reportsData.hero.ctaSecondary.text}
               </a>
             </div>
           </div>

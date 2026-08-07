@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { Readable } from "stream";
+import path from "path";
 import type { UploadApiOptions, UploadApiResponse } from "cloudinary";
 import { prisma } from "../lib/prisma";
 import { upload } from "../middleware/upload";
@@ -95,10 +96,26 @@ router.post(
         });
       }
 
-      const result = await uploadBufferToCloudinary(req.file.buffer, {
+      const resourceType = resourceTypeFor(req.file.mimetype);
+
+      const uploadOptions: UploadApiOptions = {
         folder: "fpi-zambia",
-        resource_type: resourceTypeFor(req.file.mimetype),
-      });
+        resource_type: resourceType,
+      };
+
+      // Unlike image/video, Cloudinary's "raw" delivery does not infer a
+      // Content-Type or attach a file extension to the public_id on its
+      // own -- without one, PDFs/docs come back as application/octet-stream
+      // and download with no extension. Embedding the original extension in
+      // the public_id is Cloudinary's documented workaround.
+      if (resourceType === "raw") {
+        const ext = path.extname(req.file.originalname);
+        if (ext) {
+          uploadOptions.public_id = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+        }
+      }
+
+      const result = await uploadBufferToCloudinary(req.file.buffer, uploadOptions);
 
       const media = await prisma.media.create({
         data: {

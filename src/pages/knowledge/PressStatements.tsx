@@ -24,7 +24,7 @@ const pressStatementsData = {
     title: "Press Statements",
     description:
       "Official statements, media releases and public responses from FPI Zambia.",
-    backgroundImage: "/images/activity-1.jpg",
+    backgroundImage: "/images/press.jpg",
     ctaPrimary: { text: "View Archive", link: "#archive" },
     ctaSecondary: { text: "Media Enquiries", link: "#media-contact" },
   },

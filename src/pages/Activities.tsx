@@ -20,6 +20,13 @@ interface Activity {
   published: boolean;
 }
 
+const formatActivityDate = (date?: string) => {
+  if (!date) return "";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+};
+
 const Activities = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +136,7 @@ const Activities = () => {
                     <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500 mb-5">
                       <span className="inline-flex items-center gap-1.5">
                         <Calendar size={13} />
-                        {activity.date || "TBA"}
+                        {formatActivityDate(activity.date) || "TBA"}
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <MapPin size={13} />

@@ -73,6 +73,12 @@ const inputStyle: React.CSSProperties = {
   background: "#fff",
 };
 
+const formatActivityDate = (date: string) => {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+};
+
 const Eyebrow = ({ label, light = false }: { label: string; light?: boolean }) => (
   <div className={`inline-flex items-center gap-2 mb-3 ${light ? "text-blue-200" : "text-blue-700"}`}>
     <span className="block h-[2px] w-5 rounded-full bg-current" />
@@ -708,7 +714,7 @@ const Home = () => {
                       <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5, marginBottom: 12, flex: 1 }}>{activity.description.substring(0, 80)}...</p>
                       <div style={{ borderTop: "1px solid #F0F0F0", paddingTop: 10, marginTop: "auto" }}>
                         <div style={{ display: "flex", gap: 8, color: "#9CA3AF", fontSize: 10, marginBottom: 8 }}>
-                          <span><Calendar size={10} /> {activity.date}</span>
+                          <span><Calendar size={10} /> {formatActivityDate(activity.date)}</span>
                           <span><MapPin size={10} /> {activity.location}</span>
                           <span><Users size={10} /> {activity.participants}</span>
                         </div>

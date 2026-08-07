@@ -67,10 +67,6 @@ const resourcesData = {
     description:
       "A comprehensive review of media freedom, journalism safety, digital rights and democratic participation trends in Zambia.",
     image: "/images/activity-1.jpg",
-    buttons: [
-      { text: "Read Report", link: "#" },
-      { text: "Download PDF", link: "#" },
-    ],
   },
   latest: {
     tag: "Latest Resources",
@@ -356,23 +352,6 @@ const Resources = () => {
                 <div className="flex flex-wrap gap-3">
                   {latestReport ? (
                     <>
-                      <a
-                        href={getAssetUrl(latestReport.fileUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-6 py-2 rounded-full text-sm font-semibold transition hover:-translate-y-1 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white shadow-lg"
-                      >
-                        Read Report
-                      </a>
-                      <a
-                        href={getAssetUrl(latestReport.fileUrl)}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-6 py-2 rounded-full text-sm font-semibold transition hover:-translate-y-1 border border-white/30 text-white hover:bg-white/10"
-                      >
-                        Download PDF
-                      </a>
                     </>
                   ) : (
                     <p className="text-gray-400 text-sm">No reports have been published yet.</p>

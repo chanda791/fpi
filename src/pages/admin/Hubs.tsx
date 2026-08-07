@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../services/config";
+import AdminLayout from "../../components/admin/AdminLayout";
 
 interface Hub {
   id: number;
@@ -82,7 +83,7 @@ const Hubs = () => {
   }, []);
 
   return (
-    <div className="p-6">
+    <AdminLayout>
       <div className="flex justify-between mb-6">
         <h1 className="text-3xl font-bold">
           MIL Hubs
@@ -193,7 +194,7 @@ const Hubs = () => {
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 

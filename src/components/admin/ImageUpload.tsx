@@ -6,16 +6,23 @@ interface ImageUploadProps {
   label?: string;
   value?: string;
   onChange: (url: string) => void;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 const ImageUpload = ({
   label = "Featured Image",
   value,
   onChange,
+  onUploadingChange,
 }: ImageUploadProps) => {
   const inputId = useId();
   const [preview, setPreview] = useState(getAssetUrl(value) || "");
   const [uploading, setUploading] = useState(false);
+
+  const setUploadingState = (value: boolean) => {
+    setUploading(value);
+    onUploadingChange?.(value);
+  };
 
   const handleFileChange = async (
     e: ChangeEvent<HTMLInputElement>
@@ -25,7 +32,7 @@ const ImageUpload = ({
     if (!file) return;
 
     setPreview(URL.createObjectURL(file));
-    setUploading(true);
+    setUploadingState(true);
 
     try {
       const formData = new FormData();
@@ -63,7 +70,7 @@ const ImageUpload = ({
       alert("Image upload failed.");
     }
 
-    setUploading(false);
+    setUploadingState(false);
   };
 
   return (

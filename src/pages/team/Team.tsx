@@ -48,7 +48,7 @@ const Team = () => {
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `url("/images/hero-bg-1.jpg")`,
+              backgroundImage: `url("/images/team.jpg")`,
               backgroundAttachment: "fixed",
             }}
           />
