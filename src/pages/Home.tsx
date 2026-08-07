@@ -733,14 +733,14 @@ const Home = () => {
 
       <section
         style={{
-          padding: "80px 20px",
+          padding: "50px 16px",
           background:
             "linear-gradient(135deg,#ffffff,#F8FAFC)",
         }}
       >
         <div
           style={{
-            maxWidth: 1200,
+            maxWidth: 1000,
             margin: "0 auto",
           }}
         >
@@ -780,8 +780,8 @@ const Home = () => {
             style={{
               display: "grid",
               gridTemplateColumns:
-                "repeat(auto-fit,minmax(min(420px,100%),1fr))",
-              gap: 30,
+                "repeat(auto-fit,minmax(min(280px,100%),1fr))",
+              gap: 20,
             }}
           >
             {/* VIDEO */}
@@ -789,7 +789,7 @@ const Home = () => {
             <div
               style={{
                 background: "#fff",
-                borderRadius: 24,
+                borderRadius: 18,
                 overflow: "hidden",
                 boxShadow:
                   "0 15px 40px rgba(0,0,0,.08)",
@@ -800,12 +800,12 @@ const Home = () => {
                 alt="YouTube"
                 style={{
                   width: "100%",
-                  height: 260,
+                  height: 160,
                   objectFit: "cover",
                 }}
               />
 
-              <div style={{ padding: 30 }}>
+              <div style={{ padding: 20 }}>
 
                 <div
                   style={{
@@ -875,7 +875,7 @@ const Home = () => {
             <div
               style={{
                 background: "#fff",
-                borderRadius: 24,
+                borderRadius: 18,
                 overflow: "hidden",
                 boxShadow:
                   "0 15px 40px rgba(0,0,0,.08)",
@@ -886,12 +886,12 @@ const Home = () => {
                 alt="Radio"
                 style={{
                   width: "100%",
-                  height: 260,
+                  height: 160,
                   objectFit: "cover",
                 }}
               />
 
-              <div style={{ padding: 30 }}>
+              <div style={{ padding: 20 }}>
 
                 <div
                   style={{
