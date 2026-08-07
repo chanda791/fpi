@@ -349,7 +349,7 @@ const About = () => {
                 {/* Floating stat badge */}
                 <div className="absolute -bottom-6 left-6 bg-white rounded-2xl shadow-xl px-6 py-4 flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-[#C9293A]/10 flex items-center justify-center">
-                    <span className="text-[#C9293A] font-black text-lg">9</span>
+                    <span className="text-[#C9293A] font-black text-lg">12</span>
                   </div>
                   <div>
                     <p className="font-bold text-sm text-gray-800">MIL Hubs</p>

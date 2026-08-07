@@ -24,7 +24,7 @@ const programs = [
 ];
 
 const contactItems = [
-  { icon: <MapPin size={14} />,  text: "Lusaka, Zambia"     },
+  { icon: <MapPin size={14} />,  text: "Location Unit 2, Makishi Road, Rhodes Park, Lusaka, ZM"     },
   { icon: <Phone size={14} />,   text: "+260 954 723 936"   },
   { icon: <Mail  size={14} />,   text: "prog@fpizambia.org" },
 ];

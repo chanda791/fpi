@@ -59,7 +59,7 @@ const pressStatementsData = {
     title: "Media Enquiries",
     description:
       "For interviews, comments or media enquiries, please contact FPI Zambia.",
-    email: "info@fpizambia.org",
+    email: "prog@fpizambia.org",
   },
   cta: {
     title: "Stay Informed",

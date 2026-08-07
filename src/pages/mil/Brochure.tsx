@@ -1080,7 +1080,7 @@ const Brochure = () => {
           </a>
 
           <a
-            href="/mil"
+            href="/mil/about"
             style={{
               border: "1px solid rgba(255,255,255,.3)",
               padding: "16px 34px",

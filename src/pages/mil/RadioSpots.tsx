@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Radio,
   Play,
-  Download,
   Calendar,
   Clock3,
   ArrowRight,
@@ -63,6 +63,7 @@ interface RadioSpot {
 }
 
 export default function RadioSpots() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [year, setYear] = useState("All");
   const [spots, setSpots] = useState<RadioSpot[]>([]);
@@ -703,33 +704,6 @@ export default function RadioSpots() {
                     <Play size={16} />
                     Listen
                   </button>
-
-                  <button
-                    style={{
-                      flex: 1,
-                      padding: "12px 16px",
-                      background: "#F0EDE8",
-                      color: "#1A1A1A",
-                      border: "none",
-                      borderRadius: 10,
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: 8,
-                      cursor: "pointer",
-                      fontWeight: 600,
-                      fontSize: "0.9rem",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#E5E0D8")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "#F0EDE8")
-                    }
-                  >
-                    <Download size={16} />
-                    Download
-                  </button>
                 </div>
               </div>
             </div>
@@ -1065,6 +1039,7 @@ export default function RadioSpots() {
             }}
           >
             <button
+              onClick={() => navigate("/contact")}
               style={{
                 padding: "14px 40px",
                 background: "#C9293A",
@@ -1089,6 +1064,7 @@ export default function RadioSpots() {
             </button>
 
             <button
+              onClick={() => navigate("/partners")}
               style={{
                 padding: "14px 40px",
                 background: "rgba(255,255,255,0.06)",
