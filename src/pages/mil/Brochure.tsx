@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Eye, FileText, BookOpen, Users,
-  ShieldCheck, Globe, Search,
+  ShieldCheck, Globe, Search, X,
 } from "lucide-react";
 import { API_BASE_URL, getAssetUrl } from "../../services/config";
 import DocumentPreviewModal from "../../components/DocumentPreviewModal";
@@ -135,6 +135,7 @@ const Brochure = () => {
   const [brochures, setBrochures] = useState<any[]>([]);
   const [publications, setPublications] = useState<any[]>([]);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
+  const [previewContent, setPreviewContent] = useState<{ title: string; description?: string; image?: string; kind?: string } | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/brochures`)
@@ -602,8 +603,13 @@ const Brochure = () => {
                   }}>
                     <button
                       type="button"
-                      disabled={!doc.file}
-                      onClick={() => doc.file && setPreviewDoc({ url: doc.file, title: doc.title })}
+                      disabled={!doc.file && !doc.description}
+                      onClick={() =>
+                        doc.file
+                          ? setPreviewDoc({ url: doc.file, title: doc.title })
+                          : doc.description &&
+                            setPreviewContent({ title: doc.title, description: doc.description, image: doc.image, kind: doc.kind })
+                      }
                       style={{
                         flex: 1,
                         display: "inline-flex",
@@ -616,8 +622,8 @@ const Brochure = () => {
                         border: "none",
                         borderRadius: 10,
                         fontWeight: 700,
-                        cursor: doc.file ? "pointer" : "not-allowed",
-                        opacity: doc.file ? 1 : 0.5,
+                        cursor: doc.file || doc.description ? "pointer" : "not-allowed",
+                        opacity: doc.file || doc.description ? 1 : 0.5,
                       }}
                     >
                       <Eye size={15} /> View
@@ -651,8 +657,13 @@ const Brochure = () => {
                 <button
                   key={i}
                   type="button"
-                  disabled={!doc.file}
-                  onClick={() => doc.file && setPreviewDoc({ url: doc.file, title: doc.title })}
+                  disabled={!doc.file && !doc.description}
+                  onClick={() =>
+                    doc.file
+                      ? setPreviewDoc({ url: doc.file, title: doc.title })
+                      : doc.description &&
+                        setPreviewContent({ title: doc.title, description: doc.description, image: doc.image, kind: doc.kind })
+                  }
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -663,8 +674,8 @@ const Brochure = () => {
                     textAlign: "left",
                     background: "none",
                     color: "inherit",
-                    cursor: doc.file ? "pointer" : "not-allowed",
-                    opacity: doc.file ? 1 : 0.5,
+                    cursor: doc.file || doc.description ? "pointer" : "not-allowed",
+                    opacity: doc.file || doc.description ? 1 : 0.5,
                   }}
                 >
                   <div style={{
@@ -1083,6 +1094,49 @@ const Brochure = () => {
           title={previewDoc.title}
           onClose={() => setPreviewDoc(null)}
         />
+      )}
+
+      {previewContent && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4"
+          onClick={() => setPreviewContent(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {previewContent.image && (
+              <img
+                src={previewContent.image}
+                alt={previewContent.title}
+                className="w-full h-56 object-cover rounded-t-2xl"
+              />
+            )}
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  {previewContent.kind && (
+                    <span className="text-[#C9293A] text-xs font-bold uppercase tracking-wide">
+                      {previewContent.kind}
+                    </span>
+                  )}
+                  <h3 className="font-serif text-2xl font-black mt-1">{previewContent.title}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewContent(null)}
+                  className="shrink-0 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition"
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {previewContent.description}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

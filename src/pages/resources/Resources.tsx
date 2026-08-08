@@ -72,26 +72,6 @@ const resourcesData = {
   latest: {
     tag: "Latest Resources",
     title: "Latest Resources",
-    items: [
-      {
-        type: "Report",
-        title: "Media Freedom Report 2025",
-        date: "June 2025",
-        image: "/images/activity-1.jpg",
-      },
-      {
-        type: "Newsletter",
-        title: "FPI Newsletter - June Edition",
-        date: "June 2025",
-        image: "/images/activity-2.jpg",
-      },
-      {
-        type: "Publication",
-        title: "Digital Literacy Guide",
-        date: "May 2025",
-        image: "/images/activity-3.jpg",
-      },
-    ],
   },
   stats: {
     tag: "Our Impact",
@@ -374,31 +354,28 @@ const Resources = () => {
               <h2 className="font-serif text-3xl md:text-4xl font-black">Latest Resources</h2>
             </AnimatedSection>
             <AnimatedSection delay={100}>
-              <a href="/documents/resource.pdf" className="inline-flex items-center gap-2 text-[#C9293A] font-semibold text-sm hover:gap-3 transition">
+              <a href="#browse" className="inline-flex items-center gap-2 text-[#C9293A] font-semibold text-sm hover:gap-3 transition">
                 View All <ArrowRight size={14} />
               </a>
             </AnimatedSection>
           </div>
 
+          {liveResources.length === 0 ? (
+            <p className="text-center text-gray-500">
+              No resources have been added yet. Check back soon.
+            </p>
+          ) : (
           <div className="grid md:grid-cols-3 gap-8">
-            {(liveResources.length > 0
-              ? liveResources.map((r) => ({
-                  title: r.title,
-                  type: r.category || "Resource",
-                  date: new Date(r.createdAt).toLocaleDateString("en-GB", { year: "numeric", month: "long" }),
-                  image: r.thumbnail ? getAssetUrl(r.thumbnail) : "/images/activity-1.jpg",
-                  fileUrl: r.fileUrl || "",
-                  link: r.link || "",
-                }))
-              : resourcesData.latest.items.map((item) => ({
-                  title: item.title,
-                  type: item.type,
-                  date: item.date,
-                  image: item.image,
-                  fileUrl: "",
-                  link: "/documents/resource.pdf",
-                }))
-            ).map((item, idx) => (
+            {liveResources.map((r, idx) => {
+              const item = {
+                title: r.title,
+                type: r.category || "Resource",
+                date: new Date(r.createdAt).toLocaleDateString("en-GB", { year: "numeric", month: "long" }),
+                image: r.thumbnail ? getAssetUrl(r.thumbnail) : "/images/activity-1.jpg",
+                fileUrl: r.fileUrl || "",
+                link: r.link || "",
+              };
+              return (
               <AnimatedSection key={idx} delay={idx * 100}>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
                   <div
@@ -432,8 +409,10 @@ const Resources = () => {
                   </div>
                 </div>
               </AnimatedSection>
-            ))}
+              );
+            })}
           </div>
+          )}
 
           {previewItem && (
             <DocumentPreviewModal

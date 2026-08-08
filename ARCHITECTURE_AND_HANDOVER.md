@@ -1,12 +1,13 @@
 # FPI Zambia Website & CMS — Architecture and Developer Handover
 
-This document is a complete architectural review of the repository as it actually exists on disk (audited 2026-07-19). It is written for a senior developer who has never seen this codebase before and needs to become fully productive without live guidance. Every claim below is based on reading the actual source files listed — no feature is described unless it is implemented.
+This document is a complete architectural review of the repository as it actually exists on disk (originally audited 2026-07-19, **updated 2026-08-08** to reflect the Cloudinary migration and a round of feature work — see §18 "August 2026 Update Log" for a summary of everything that changed and why the two dates matter). It is written for a senior developer who has never seen this codebase before and needs to become fully productive without live guidance. Every claim below is based on reading the actual source files listed — no feature is described unless it is implemented.
 
-Two shorter documents already exist in this repo and remain useful:
-- `CLAUDE.md` — terse architecture notes aimed at AI coding assistants.
+Three shorter documents exist alongside this one and remain useful:
+- `CLAUDE.md` — terse architecture notes aimed at AI coding assistants (also auto-loaded by Claude Code as project instructions).
 - `HANDOVER.md` — a security/ops-focused pre-launch checklist for whoever hosts the site.
+- `PASSWORD_RECOVERY.md` — a focused explainer of the SMTP-based "forgot password" flow.
 
-This document supersedes neither; it is the long-form version that explains *why* the codebase looks the way it does, file by file.
+This document supersedes none of them; it is the long-form version that explains *why* the codebase looks the way it does, file by file. If anything in this document conflicts with the actual source (schema, routes, components), **trust the source** — this file is a snapshot, not a build artifact.
 
 ---
 
@@ -37,7 +38,9 @@ The repository implements the public website and content-management system (CMS)
 | Backend dev runner | ts-node-dev | 2.0.0 |
 | ORM | Prisma (`@prisma/client` + `prisma` CLI) | 6.19.3 |
 | Database | PostgreSQL, hosted on **Neon** (serverless Postgres) | — |
-| File uploads | Multer (disk storage) | 2.2.0 |
+| File uploads | Multer (**in-memory buffer**, not disk) + Cloudinary SDK — see §3.9 | multer 2.2.0 / cloudinary 2.10.0 |
+| Media hosting/CDN | **Cloudinary** (images, PDFs/docs as `raw`, audio/video as `video` resource type) | 2.10.0 |
+| Env loading | `dotenv` (backend) — used directly by `prisma.config.ts`; `backend/src/loadEnv.ts` is a separate hand-rolled loader used by the app itself (both exist, see §3.1) | 17.4.2 |
 | Email | Nodemailer | 9.0.3 |
 | Rate limiting | express-rate-limit | 8.6.0 |
 | CORS | cors | 2.8.5 |
@@ -119,14 +122,22 @@ fpi/
     │
     ├── components/
     │   ├── BackButton.tsx        # shared "go back" control; used on detail pages (uses useGoBack hook)
-    │   ├── Lightbox.tsx          # image lightbox/gallery viewer; used by ActivityDetail, ProjectDetail
+    │   ├── Lightbox.tsx          # image lightbox/gallery viewer; used by ActivityDetail, ProjectDetail,
+    │   │                         #   and (added August 2026) ProgramSections.tsx's section-gallery modal
+    │   ├── DocumentPreviewModal.tsx  # ADDED August 2026 — shared PDF/doc preview modal (open in place vs.
+    │   │                         #   force-download); resolves Cloudinary raw-file URLs through the
+    │   │                         #   /media/proxy endpoint (getPreviewUrl/getDownloadUrl in services/config.ts).
+    │   │                         #   Used by every knowledge-centre page (Reports, Publications, Newsletters,
+    │   │                         #   Press Statements, Brochure) and ProgramSections.tsx
     │   ├── MaintenanceGate.tsx   # fetches /settings, blocks the public site when maintenanceMode=true
     │   ├── ScrollToTop.tsx       # resets scroll position on route change; mounted once in App.tsx
     │   ├── layout/
     │   │   ├── Navbar.tsx        # public-site navigation bar (mega-menu dropdowns, mobile drawer, search)
     │   │   └── Footer.tsx        # public-site footer (newsletter signup, social links, sitemap)
     │   ├── programs/
-    │   │   └── ProgramSections.tsx  # renders the dynamic `sections` JSON blocks for a ProgramContent page
+    │   │   └── ProgramSections.tsx  # renders the dynamic `sections` JSON blocks for a ProgramContent page;
+    │   │                            #   as of August 2026 each section can carry a gallery of extra images
+    │   │                            #   (opens in Lightbox) in addition to its single cover `image`
     │   └── admin/                # CMS-only shared UI kit (all hand-built, no external component library)
     │       ├── AdminLayout.tsx, Sidebar.tsx, Header.tsx      # CMS shell: sidebar nav + top bar wrapping every /admin page
     │       ├── ProtectedRoute.tsx                            # redirects to /admin/login if isAuthenticated() is false
@@ -141,8 +152,11 @@ fpi/
     │       │   └── SearchBar.tsx     # controlled search input used above every DataTable
     │       ├── activity/    ActivityForm.tsx, ActivityGalleryPicker.tsx, CategorySelect.tsx, ProgramSelect.tsx, ProvinceSelect.tsx, PublishSwitch.tsx
     │       ├── project/     ProjectForm.tsx, ProjectGalleryPicker.tsx, ProjectImagePicker.tsx, ProjectCategorySelect.tsx, ProjectStatusSelect.tsx, PublishSwitch.tsx
+    │       │                #   ProjectGalleryPicker is reused as-is (with configurable label/help text,
+    │       │                #   added August 2026) by ProgramsAdmin.tsx for per-section image galleries
     │       ├── team/        CategorySelect.tsx, PublishSwitch.tsx, ResponsibilitiesEditor.tsx, TeamImagePicker.tsx
-    │       ├── document/    DocumentForm.tsx, DocumentUpload.tsx, DocumentCategorySelect.tsx, PublishSwitch.tsx  (shared by Reports/Publications/PressStatements/Newsletters forms)
+    │       ├── document/    DocumentForm.tsx, DocumentUpload.tsx, DocumentCategorySelect.tsx, PublishSwitch.tsx  (shared by Reports/Publications/PressStatements/Newsletters forms;
+    │       │                #   gained optional showImage/showDate props in August 2026 for Reports' cover image and Newsletters' backdatable publishDate)
     │       ├── homepage/    HomepageEditor.tsx, CTAEditor.tsx, FeaturedProjectsEditor.tsx, GalleryEditor.tsx, LatestActivitiesEditor.tsx, QuickAccessEditor.tsx, StatisticsEditor.tsx
     │       ├── radio/       RadioSpotForm.tsx
     │       ├── dashboard/   (dashboard widgets used by pages/admin/Dashboard.tsx)
@@ -186,19 +200,27 @@ fpi/
     │       ├── {PressStatements,CreatePressStatement,EditPressStatement}.tsx
     │       ├── {RadioSpots,CreateRadioSpot,EditRadioSpot}.tsx
     │       ├── {Hubs,CreateHub,EditHub}.tsx, Provinces.tsx
+    │       ├── HubEvents.tsx, HubPhotos.tsx   # ADDED August 2026 — HubEvent/HubPhoto had DB models + routes
+    │       │                                  #   since June but no admin UI at all until this; standalone
+    │       │                                  #   list+inline-form pages (not nested inside EditHub), matching
+    │       │                                  #   the BrochuresAdmin.tsx pattern
     │       ├── {TeamMembers,CreateTeam,EditTeam}.tsx
     │       ├── media/{MediaLibrary,UploadMedia,EditMedia,MediaPicker}.tsx
     │       ├── Settings.tsx, Users.tsx
     │       ├── PartnersAdmin.tsx, DonorsAdmin.tsx, TestimonialsAdmin.tsx, SubscribersAdmin.tsx, ContactMessagesAdmin.tsx, ResourcesAdmin.tsx, BrochuresAdmin.tsx, ProgramsAdmin.tsx
     │
-    ├── services/                # frontend API client layer (23 files)
-    │   ├── config.ts             # API_BASE_URL/API_ORIGIN derivation, getAssetUrl(), installApiFetchInterceptor()
+    ├── services/                # frontend API client layer (25 files as of August 2026)
+    │   ├── config.ts             # API_BASE_URL/API_ORIGIN derivation, getAssetUrl(), getPreviewUrl()/
+    │   │                         #   getDownloadUrl() (ADDED August 2026 — route Cloudinary raw-file URLs
+    │   │                         #   through /media/proxy, see §3.9), installApiFetchInterceptor()
     │   ├── api.ts                 # low-level fetch wrapper: api.get/post/put/patch/delete, attaches bearer token, 401 handling
     │   ├── auth.ts                # login/logout/forgotPassword/resetPassword/changePassword + isAuthenticated()
     │   ├── BaseService.ts         # generic CRUD class extended by most resource services
     │   ├── activityService.ts, projectService.ts, teamService.ts, hubService.ts, mediaService.ts,
     │   │   newsletterService.ts, pressStatementService.ts, publicationService.ts, radioSpotService.ts,
     │   │   reportService.ts, provinceService.ts                       # thin BaseService<T> subclasses/instances
+    │   ├── hubEventService.ts, hubPhotoService.ts   # ADDED August 2026 — thin object-literal services (not
+    │   │                         #   BaseService subclasses) matching /api/hub-events, /api/hub-photos
     │   ├── homepageService.ts     # BaseService subclass + getSection/updateSection helpers
     │   ├── brochureService.ts, contactService.ts, donorService.ts, partnerService.ts,
     │   │   programContentService.ts, resourceService.ts, settingsService.ts, subscriberService.ts,
@@ -252,10 +274,13 @@ backend/
     ├── server.ts                  # app bootstrap: CORS, JSON body parsing, route mounting order, static /uploads, global error handler, app.listen
     ├── loadEnv.ts                 # hand-rolled .env parser, imported first (`import "./loadEnv"`) in server.ts, before any other module reads process.env
     ├── lib/
-    │   └── prisma.ts              # `export const prisma = new PrismaClient()` — the single shared Prisma client instance
+    │   ├── prisma.ts              # `export const prisma = new PrismaClient()` — the single shared Prisma client instance
+    │   └── cloudinary.ts          # ADDED August 2026 — configured Cloudinary v2 client (reads CLOUDINARY_*
+    │                              #   env vars, warns to console if any are missing); imported by routes/media.ts
     ├── middleware/
     │   ├── auth.ts                 # requireAuth, requireAuthForMutations, requireAdmin + AuthPayload/req.authUser typing
-    │   ├── upload.ts               # multer disk-storage config: uploadPath resolution, filename generation, mimetype allowlist, 20MB limit
+    │   ├── upload.ts               # multer **memory-storage** config (changed August 2026, was disk storage):
+    │   │                            #   mimetype allowlist, 20MB limit; legacy uploadPath still resolved for old files
     │   └── rateLimit.ts            # loginRateLimit, passwordResetRateLimit, publicWriteRateLimit (express-rate-limit instances)
     ├── utils/
     │   ├── auth.ts                 # hashPassword/verifyPassword (PBKDF2-SHA512) + signToken/verifyToken (hand-rolled HMAC-SHA256 JWT)
@@ -377,15 +402,29 @@ Two layers:
 
 Covered in full in §9. Summary: custom JWT bearer tokens, `Authorization: Bearer <token>` header, three middleware functions (`requireAuth`, `requireAuthForMutations`, `requireAdmin`) in `middleware/auth.ts`.
 
-### 3.9 File uploads
+### 3.9 File uploads (Cloudinary — migrated since the July audit)
 
-`middleware/upload.ts` configures a single shared Multer instance:
-- **Storage**: disk storage, destination = `uploadPath` (resolved from `UPLOAD_DIR` env var, default `backend/src/uploads`, created with `fs.mkdirSync(..., { recursive: true })` if missing at module load time).
-- **Filename**: `${Date.now()}-${Math.round(Math.random()*1e9)}${ext}` — collision-resistant but not cryptographically random; original filename is discarded from the stored file (kept separately as `originalName` in the `Media` DB row).
-- **File filter (allowlist)**: `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `application/pdf`, `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (docx), `audio/mpeg`/`audio/mp3`, `video/mp4`. **SVG is deliberately excluded** — a code comment explains this is because SVG served directly from `/uploads` can carry an embedded `<script>` tag (stored-XSS risk).
+**This section describes the current implementation. An earlier version of this document (and the file-tree comments in some older commits) described local-disk storage via `multer.diskStorage` — that is no longer accurate.** The migration is tracked in `backend/CLOUDINARY_MIGRATION.md`.
+
+`middleware/upload.ts` configures a single shared Multer instance, but Multer's only job now is to parse the multipart request and hold the file **in memory** — it never touches disk:
+- **Storage**: `multer.memoryStorage()`. `uploadPath` (from `UPLOAD_DIR`, default `backend/src/uploads`) is still computed and still statically served (see below) purely so files uploaded *before* the Cloudinary cutover keep resolving — nothing writes new files there anymore.
+- **File filter (allowlist)**: unchanged — `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `application/pdf`, `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (docx), `audio/mpeg`/`audio/mp3`, `video/mp4`. **SVG is still deliberately excluded** (stored-XSS risk — SVG can carry an embedded `<script>`).
 - **Limit**: 20 MB per file (`limits.fileSize`).
-- Only `routes/media.ts`'s `POST /api/media` actually uses `upload.single("file")`. Every other "file" a content type references (activity images, report PDFs, etc.) is really just a URL string pointing at a `Media` row created via this one shared upload endpoint — see §5 (`Media` model has no FK relations; other content models store `String`/`String[]` URLs copied from a `Media.url`).
-- Uploaded files are served back out via `app.use("/uploads", express.static(uploadPath))` — a plain static file server, unauthenticated, mounted after the auth gate line but itself has no auth check (static middleware doesn't consult `requireAuthForMutations`; GET requests to it were never gated anyway).
+
+`routes/media.ts` (`POST /api/media`) is the only route that runs `upload.single("file")`, then:
+1. Picks a Cloudinary `resource_type` from the mimetype: `image/*` → `"image"`, `audio/*` or `video/*` → `"video"` (Cloudinary's catch-all category for non-image binary media — this is how MP3 radio-spot audio is classified), everything else (PDF, Word) → `"raw"`.
+2. Streams the in-memory buffer to Cloudinary via `cloudinary.uploader.upload_stream({ folder: "fpi-zambia", resource_type })` (`backend/src/lib/cloudinary.ts` holds the configured client, reading `CLOUDINARY_CLOUD_NAME`/`CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET`).
+3. **Raw uploads deliberately do *not* embed the file extension in the Cloudinary `public_id`** (e.g. `fpi-zambia/1786172601848-425951427`, not `...425951427.pdf`). An earlier version of this code did embed the extension (to work around Cloudinary raw delivery not inferring a Content-Type) — that was found to actively break downloads, see §17.2.
+4. Creates a `Media` row: `filename` = Cloudinary `public_id`, `originalName` = the uploaded file's original name, `url` = Cloudinary's `secure_url`, plus `mimeType`/`size`/`alt`/`description`.
+
+**Legacy static serving**: `app.use("/uploads", express.static(uploadPath))` is still mounted (unauthenticated, same as before) purely to keep pre-migration `Media.url` values resolving. Nothing new is ever written there.
+
+**Serving files back out — the `/media/proxy` route**: Cloudinary's `raw` delivery type always sends `Content-Disposition: attachment` and ignores on-the-fly transform params (`fl_attachment` 404s on raw), so the app cannot get Cloudinary to (a) render a PDF inline in an `<iframe>` preview, or (b) set a clean download filename, by editing the Cloudinary URL alone. `GET /api/media/proxy?url=<cloudinary-url>&mode=inline|attachment&filename=<name>` (also in `routes/media.ts`) solves this by having the **backend** fetch the Cloudinary URL server-side and re-stream it to the browser with headers it controls itself:
+- Validates the `url` param is `https://res.cloudinary.com/<our cloud name>/...` before fetching anything (prevents this endpoint being used as an open proxy for arbitrary URLs — it has no auth requirement of its own).
+- Sets `Content-Type` from Cloudinary's response header (or `application/pdf` as a fallback for `mode=inline` when Cloudinary reports `application/octet-stream`, which happens for legacy assets with no extension in their `public_id`).
+- Sets `Content-Disposition: inline` or `attachment` with a sanitized `filename` built from the `filename` query param.
+- `src/services/config.ts`'s `getPreviewUrl()`/`getDownloadUrl()` helpers build URLs to this proxy automatically (only for `res.cloudinary.com/` URLs — local `/uploads/...` legacy URLs and plain images pass through unproxied) and are what every document preview modal / download button in the frontend actually links to, not the raw Cloudinary URL. See `src/components/DocumentPreviewModal.tsx`.
+- **Known limitation, not yet worked around in code**: this proxy still ultimately fetches from Cloudinary, so it inherits whatever Cloudinary's own delivery restrictions allow — see §17.2 for a real account-level restriction that can make this return `502` for legitimate files.
 
 ### 3.10 Complete request lifecycle
 
@@ -491,8 +530,8 @@ All of the following share the exact same shape: `GET /`, `GET /:id`, `POST /`, 
 | Team members | `/team` | `TeamMember` | `teamService` (BaseService) | `TeamMembers`, `CreateTeam`, `EditTeam` | List ordered by `displayOrder asc` |
 | Provinces | `/provinces` | `Province` | `provinceService` (BaseService) | `Provinces` | Includes nested `hubs` on both list & single-item GET |
 | Hubs | `/hubs` | `Hub` | `hubService` (BaseService) | `Hubs`, `CreateHub`, `EditHub` | `GET /hubs/:id` accepts **either a numeric id or a slug** (`isNumeric` branch); includes `province`, `photos`, `events` |
-| Hub Photos | `/hub-photos` | `HubPhoto` | direct `fetch` in hub admin pages | part of `EditHub`/Hub gallery UI | Only `GET /`, `POST /`, `DELETE /:id` — no update endpoint |
-| Hub Events | `/hub-events` | `HubEvent` | direct `fetch` in hub admin pages | part of `EditHub` | Full CRUD (no delete-by-hub cascade route; relies on FK) |
+| Hub Photos | `/hub-photos` | `HubPhoto` | `hubPhotoService` (plain object) | **`HubPhotos.tsx`** (standalone list+inline-form page, added August 2026 — the route existed since June with no frontend caller at all until this) | Only `GET /`, `POST /`, `DELETE /:id` — no update endpoint. Rendered as a Swiper slideshow (not a static grid) on the public hub detail page |
+| Hub Events | `/hub-events` | `HubEvent` | `hubEventService` (plain object) | **`HubEvents.tsx`** (standalone list+inline-form page, added August 2026 — same "route with no frontend" gap as HubPhoto until this) | Full CRUD (no delete-by-hub cascade route; relies on FK). `eventType` field (added August 2026) drives real "Training Sessions"/"Community Events" counts on the public MIL Hubs stats, replacing hardcoded placeholder numbers |
 | Media | `/media` | `Media` | `mediaService` (BaseService) | `MediaLibrary`, `UploadMedia`, `EditMedia` | `POST /` is `multipart/form-data` via `upload.single("file")`, not JSON — see §4.5 |
 | Partners | `/partners` | `Partner` | `partnerService` (plain object) | `PartnersAdmin` | Ordered by `displayOrder asc, createdAt desc` |
 | Donors | `/donors` | `Donor` | `donorService` (plain object) | `DonorsAdmin` | Same ordering pattern |
@@ -512,17 +551,27 @@ All of the following share the exact same shape: `GET /`, `GET /:id`, `POST /`, 
 
 **DB table**: `User`. **Frontend**: `userService.ts` → `pages/admin/Users.tsx`.
 
-### 4.5 Media upload — `POST /api/media`
+### 4.5 Media upload — `POST /api/media` (Cloudinary-backed)
 
 - **Method/URL**: `POST /api/media`
 - **Auth**: Auth (any) — behind the blanket gate.
 - **Content-Type**: `multipart/form-data` (the one exception to the app's JSON convention).
 - **Body fields**: `file` (binary, required — field name matches `upload.single("file")`), `originalName?`, `alt?`, `description?` (all optional text fields alongside the file).
-- **What happens**: Multer validates mimetype/size, writes the file to `UPLOAD_DIR`; the route then creates a `Media` row with `filename` (disk name), `originalName`, `url` (`APP_BASE_URL + /uploads/<filename>`, or just `/uploads/<filename>` if `APP_BASE_URL` is unset), `mimeType`, `size`.
-- **Response**: `201` with the created `Media` object (including `url`, which every other admin form then stores as its own `image`/`fileUrl`/`audioUrl` string field).
-- **Status codes**: `400` if no file attached or mimetype/size rejected (surfaces via the global error handler for multer-level failures); `500` on DB failure.
+- **What happens**: Multer validates mimetype/size and holds the file in memory (no disk write); the route uploads the buffer to Cloudinary (`folder: "fpi-zambia"`, `resource_type` chosen from the mimetype — see §3.9), then creates a `Media` row with `filename` (Cloudinary `public_id`), `originalName`, `url` (Cloudinary's `secure_url`), `mimeType`, `size`.
+- **Response**: `201` with the created `Media` object (including `url`, which every other admin form then stores as its own `image`/`fileUrl`/`audioUrl` string field — usually run through `getAssetUrl()`/`getPreviewUrl()`/`getDownloadUrl()` in `src/services/config.ts` before being used, see §3.9).
+- **Status codes**: `400` if no file attached or mimetype/size rejected (surfaces via the global error handler for multer-level failures); `500` on DB or Cloudinary failure.
 - **DB table**: `Media`.
 - **Frontend callers**: `components/admin/ImageUpload.tsx`, `FileUpload.tsx`, `AudioUpload.tsx` — all three call `fetch(`${API_BASE_URL}/media`, ...)` **directly**, not through `mediaService.ts` (which exists only for list/get/update/delete of already-uploaded media in the Media Library pages).
+
+### 4.5a Media proxy — `GET /api/media/proxy` (Cloudinary raw-file passthrough)
+
+- **Method/URL**: `GET /api/media/proxy?url=<cloudinary-secure-url>&mode=inline|attachment&filename=<name>`
+- **Auth**: none (this route has no auth requirement of its own — it's read-only and only proxies our own Cloudinary assets, see below).
+- **What happens**: server-side `fetch()` of the given Cloudinary URL, re-streamed to the client with a `Content-Type`/`Content-Disposition` the backend controls. Exists because Cloudinary's `raw` delivery type (used for PDFs/Word docs) always forces `Content-Disposition: attachment` and can't be told to render inline or use a clean filename via URL params alone (see §3.9 for the full rationale).
+- **Validation**: rejects (`400`) any `url` that isn't `https://res.cloudinary.com/<CLOUDINARY_CLOUD_NAME>/...` — this is a deliberate allowlist so the endpoint can't be abused as a general-purpose URL proxy.
+- **Response**: the file bytes, streamed, with `mode=inline` → `Content-Disposition: inline` (used for in-app document preview modals) or `mode=attachment` (default) → `Content-Disposition: attachment; filename="<sanitized name>.<ext>"` (used for the "Download" button — this is also why downloads get a proper filename instead of Chrome's `Unconfirmed 12345.crdownload`, which is what raw `<a download>` produces for cross-origin URLs).
+- **Status codes**: `400` invalid/disallowed URL; `502` if the upstream Cloudinary fetch itself fails or is rejected (see §17.2 for a real-world cause of this).
+- **Frontend callers**: `src/services/config.ts`'s `getPreviewUrl()`/`getDownloadUrl()` — used by `DocumentPreviewModal.tsx` and every "download this document" button across the knowledge-centre pages (Reports, Publications, Newsletters, Press Statements, Brochure).
 
 ### 4.6 Homepage sections — `/api/homepage` (the one "layered" resource)
 
@@ -589,7 +638,7 @@ Every model in this group follows the same convention: `id Int @id @default(auto
 **`Project`** — a flagship/ongoing project.
 Fields: `title`, `description`, `content` (String, required); `image` (String?), `images` (String[] default []); `category`/`status` (String?); `startDate`/`endDate` (DateTime?); `published`; `featured` (Boolean default false — drives the homepage "featured projects" section); audit columns.
 
-**`Report`**, **`Publication`**, **`PressStatement`**, **`Newsletter`**, **`Brochure`** — five near-identical "document" models, each essentially `{ title, description?, fileUrl, [image?], published, createdAt, updatedAt }`. `Newsletter` is the outlier: it has **no `published` field and no `updatedAt`** (only `id, title, fileUrl, createdAt`) — every newsletter is implicitly always public, and edits don't bump a timestamp. `Publication` additionally has an optional `image` field the others lack.
+**`Report`**, **`Publication`**, **`PressStatement`**, **`Newsletter`**, **`Brochure`** — five near-identical "document" models, all now the same shape: `{ title, description?, fileUrl, image?, published, createdAt, updatedAt }` (`Brochure` uses `thumbnail` instead of `image`, and has no `description`... actually it does have `description?` — the only real difference is the image field's name and that `Brochure`/`Resource` additionally carry `displayOrder`, see §5.1's directory-entry group below). **As of August 2026 these are no longer inconsistent** — `Newsletter` previously had only `{id, title, fileUrl, createdAt}` (no `image`, no `published`, no `updatedAt`) and was silently always-public with no way to feature a cover image; it was brought in line with the others (`description?`, `image?`, `published`, `updatedAt` added), plus one field the others don't have: `publishDate DateTime?` — lets an admin backdate a newsletter to when it actually went out (e.g. entering last month's issue today), independent of `createdAt`. The public `Newsletters.tsx` page sorts/displays by `publishDate ?? createdAt`. `Report` also gained `image?` in the same round of changes (previously text-only).
 
 **`TeamMember`**: `fullName`, `position`, `category` (String, required); `biography` (`String @db.Text` — explicitly TEXT rather than VARCHAR, for long bios); `responsibilities` (`Json` — stored as a JSON array of strings, though the frontend types it as `string[]`); `image` (String?); `displayOrder` (Int, default 0, drives sort order); `published`; audit columns.
 
@@ -603,11 +652,11 @@ Fields: `title`, `description`, `content` (String, required); `image` (String?),
 
 **`Province`**: `id` (PK), `name` (`String @unique`), `createdAt`. One-to-many → `Hub[]`.
 
-**`Hub`**: `id` (PK), `name`, `slug` (`String @unique` — used for the public `/mil/hub/:slug` route), `location?`, `coordinator?`, `participants` (Int default 0), `description?`, `image?`, `published`; **`provinceId` (Int, FK)** → `province Province @relation(fields: [provinceId], references: [id])`; audit columns; one-to-many → `HubPhoto[]`, `HubEvent[]`.
+**`Hub`**: `id` (PK), `name`, `slug` (`String @unique` — used for the public `/mil/hub/:slug` route), `location?`, `coordinator?`, `coordinatorImage?` (String — added August 2026, optional headshot for the coordinator card on the public hub detail page), `participants` (Int default 0), `description?`, `image?`, `published`; **`provinceId` (Int, FK)** → `province Province @relation(fields: [provinceId], references: [id])`; audit columns; one-to-many → `HubPhoto[]`, `HubEvent[]`.
 
-**`HubPhoto`**: `id` (PK), `imageUrl` (required), `caption?`; **`hubId` (Int, FK)** → `hub Hub @relation(...)`; `createdAt` only (no `updatedAt`/`published` — photos are add/remove only, never edited in place).
+**`HubPhoto`**: `id` (PK), `imageUrl` (required), `caption?`; **`hubId` (Int, FK)** → `hub Hub @relation(...)`; `createdAt` only (no `updatedAt`/`published` — photos are add/remove only, never edited in place). As of August 2026 this has a real admin UI (`pages/admin/HubPhotos.tsx`) — previously the route existed but nothing in the frontend called it (see §5.6 and §18.1). Rendered on the public hub detail page as a Swiper slideshow, not a static grid.
 
-**`HubEvent`**: `id` (PK), `title` (required), `description?`, `eventDate` (DateTime, required); **`hubId` (Int, FK)** → `hub`; `createdAt` only.
+**`HubEvent`**: `id` (PK), `title` (required), `description?`, `eventType` (String, default `"Community"` — added August 2026, expected values `"Training"` / `"Community"`, **not** a Prisma enum, just a convention enforced by the admin form's `<select>`), `eventDate` (DateTime, required); **`hubId` (Int, FK)** → `hub`; `createdAt` only. `eventType` is what drives the "Training Sessions" vs "Community Events" counts on the public MIL Hubs "Impact at a Glance" stats — those were previously hardcoded placeholder numbers; they're now computed live from real `HubEvent` rows (`pages/mil/Hubs.tsx` fetches `/hubs` and counts published hubs' events by type). Like `HubPhoto`, this model's route existed with no admin UI until August 2026 (`pages/admin/HubEvents.tsx`).
 
 Relational diagram:
 ```
@@ -618,7 +667,7 @@ Deleting a `Province` or `Hub` that still has dependent rows will fail at the da
 
 ### 5.3 Media library
 
-**`Media`**: `id` (PK); `filename` (disk filename, required); `originalName` (required); `url` (required — the public-facing URL every other model's `image`/`fileUrl` field actually stores a copy of); `mimeType` (required); `size` (Int, required, bytes); `width?`/`height?` (Int, populated only if something sets them — no route currently computes image dimensions server-side, so these stay `null` in practice); `alt?`/`caption?`/`description?`; `folder?` (default `"General"` — a free-text grouping label, not a relation); audit columns. **No foreign keys to or from any other model** — every content model that "uses" an image or file stores a plain string copy of `Media.url`, not a relation. This means deleting a `Media` row does **not** cascade or warn — other records referencing that URL will silently start pointing at a dead link.
+**`Media`**: `id` (PK); `filename` (the Cloudinary `public_id` since the August 2026 Cloudinary migration — was a local disk filename before that, see §3.9); `originalName` (required); `url` (required — a Cloudinary `secure_url` since the migration; the public-facing URL every other model's `image`/`fileUrl` field actually stores a copy of); `mimeType` (required); `size` (Int, required, bytes); `width?`/`height?` (Int, populated only if something sets them — no route currently computes image dimensions server-side, so these stay `null` in practice); `alt?`/`caption?`/`description?`; `folder?` (default `"General"` — a free-text grouping label, not a relation); audit columns. **No foreign keys to or from any other model** — every content model that "uses" an image or file stores a plain string copy of `Media.url`, not a relation. This means deleting a `Media` row does **not** cascade or warn — other records referencing that URL will silently start pointing at a dead link.
 
 ### 5.4 Homepage / settings / auth models
 
@@ -649,7 +698,7 @@ Deleting a `Province` or `Hub` that still has dependent rows will fail at the da
 | RadioSpot | CreateRadioSpot/EditRadioSpot | mil/RadioSpots (merged with static `data/radioSpots.ts`) | RadioSpots (list) |
 | Partner/Donor/Resource | *Admin pages | Partners/Donors/Resources | matching *Admin list pages |
 | ProgramContent | ProgramsAdmin | Programs, Advocacy, MediaLiteracy, Research, CapacityBuilding | ProgramsAdmin |
-| Province/Hub/HubPhoto/HubEvent | Provinces/CreateHub/EditHub | mil/Hubs, AllHubs, ProvinceHubs, HubDetail | Hubs (list), EditHub (photos/events) |
+| Province/Hub/HubPhoto/HubEvent | Provinces/CreateHub/EditHub, HubPhotos, HubEvents | mil/Hubs, AllHubs, ProvinceHubs, HubDetail | Hubs (list), HubPhotos (list), HubEvents (list) |
 | Media | UploadMedia, every `ImageUpload`/`FileUpload`/`AudioUpload` widget | indirectly, via URLs copied into other models | MediaLibrary, EditMedia, MediaPicker |
 | HomepageSection | Homepage (admin editor) | Home (partially) | Homepage |
 | SiteSettings | Settings | MaintenanceGate (maintenanceMode only) | Settings |
@@ -758,7 +807,7 @@ Neon-managed PostgreSQL compute
 | `PORT` | Port the Express server listens on | `server.ts` (`Number(process.env.PORT \|\| 5000)`) | Falls back to `5000` | Yes (not sensitive) |
 | `APP_BASE_URL` | Public URL of the backend itself | `routes/media.ts` (`mediaUrl()` prefixes uploaded-file URLs) | Media URLs become relative (`/uploads/...`) instead of absolute — can break `<img>` tags in contexts expecting an absolute URL | Yes |
 | `APP_PUBLIC_URL` | Public URL of the **frontend** | `routes/auth.ts` (builds the password-reset link); falls back to `CORS_ORIGIN`, then hardcoded `http://localhost:3000` | Password-reset emails link to the wrong (or dev) frontend URL | Yes |
-| `UPLOAD_DIR` | Filesystem path for uploaded files | `middleware/upload.ts` | Falls back to `backend/src/uploads` — fine locally, but on ephemeral-filesystem PaaS hosts, uploads vanish on every redeploy unless this points at a persistent volume | Yes (it's just a path) |
+| `UPLOAD_DIR` | Filesystem path — **legacy only** since the Cloudinary migration (§3.9): no new uploads are written here, it's kept solely so pre-migration `Media.url` values (pointing at local `/uploads/...` paths) keep resolving | `middleware/upload.ts` | Falls back to `backend/src/uploads`. Missing/wrong value only breaks *old* uploaded files, not new ones | Yes (it's just a path) |
 | `CORS_ORIGIN` | Comma-separated allowlist of frontend origins | `server.ts` (CORS config), `routes/auth.ts` (reset-link fallback) | If unset: `allowedOrigins` is empty, so **all** browser cross-origin requests are rejected — the deployed frontend simply cannot talk to the API at all | Yes |
 | `JWT_SECRET` | HMAC key signing/verifying auth tokens | `utils/auth.ts` (`getSecret()`) | Falls back to `process.env.AUTH_SECRET`, then the **hardcoded literal** `"change-this-secret-before-production"` — a critical, silent security hole if never set | **No** — must stay secret |
 | `JWT_EXPIRES_IN_SECONDS` | Token lifetime override | `utils/auth.ts` | Falls back to `28800` (8 hours) | Yes, but low sensitivity to disclose |
@@ -766,6 +815,9 @@ Neon-managed PostgreSQL compute
 | `ADMIN_EMAIL` | Bootstrap superuser email | `routes/auth.ts` (`/login`) | If unset alongside `ADMIN_PASSWORD`, the env-based login path is simply skipped (falls through to the `User` table) | No (identifies the break-glass account) |
 | `ADMIN_PASSWORD` | Bootstrap superuser password, compared **in plaintext** to the request body | `routes/auth.ts` (`/login`) | Same as above | **No** — this is a live credential, currently a weak-ish generated string in the dev `.env`; must be rotated for any real deployment |
 | `ADMIN_NAME` | Display name for the bootstrap account | `routes/auth.ts` | Falls back to `"Administrator"` | Yes |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account identifier | `lib/cloudinary.ts`, `routes/media.ts`'s `/media/proxy` URL allowlist | Every upload fails; a startup console warning is logged (see §3.9) | Yes — cloud name alone isn't a secret |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | `lib/cloudinary.ts` | Same as above | **No** |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | `lib/cloudinary.ts` | Same as above | **No** — full upload/delete credential |
 
 **Not env-configured (a common misconception to flag)**: SMTP is **not** set via environment variables at all — it's configured at runtime through the CMS itself (`Settings → SMTP`, stored in the `SiteSettings` table, read live by `utils/mailer.ts` on every send). There is no `SMTP_HOST`/`SMTP_USER`/etc. env var anywhere in this codebase, despite that being a common pattern elsewhere — don't add one without also updating `mailer.ts`, or the two configuration sources will silently diverge.
 
@@ -1003,7 +1055,7 @@ npm start                     # node dist/server.js
 ```
 - Needs a **long-running Node process host** (Render, Railway, Fly.io, a VPS, etc.) — it is a persistent Express server, not compatible with a pure serverless-function host without rearchitecting (file uploads to local disk, in particular, assume a persistent filesystem across requests).
 - **Required environment variables** (see §8.1 for full detail): `DATABASE_URL`, `PORT` (often auto-injected by the host), `APP_BASE_URL`, `APP_PUBLIC_URL`, `UPLOAD_DIR`, `CORS_ORIGIN`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`.
-- **Static assets / uploads**: `UPLOAD_DIR` must point at storage that survives redeploys — attach a persistent volume on the host, or migrate `middleware/upload.ts` off local disk onto an object store (S3/R2/etc.) before relying on this in production. This is the single most common way a new deployment silently loses previously-uploaded images.
+- **Static assets / uploads**: new uploads already go to Cloudinary (§3.9), so this is no longer the deployment landmine it used to be — the object-store migration `HANDOVER.md`/this section previously called for is **done**. The only remaining local-disk dependency is legacy pre-migration files still referenced by old `Media.url` values (a persistent `UPLOAD_DIR` volume, or accepting those specific old links will 404 on a fresh host, is the only decision left here).
 - **Database connection**: point `DATABASE_URL` at the production Neon database (or any other Postgres instance — Prisma is provider-agnostic here, only `migration_lock.toml`'s `provider = "postgresql"` pins the SQL dialect, not the specific host). If keeping Neon, prefer its pooled (`-pooler`) connection string for a normal Express deployment.
 - **Domain / SSL / reverse proxy**: this app does not terminate TLS itself and does not need an in-process reverse proxy — standard practice is to put the Node process behind whatever the host provides (Render/Railway/Fly all terminate TLS and reverse-proxy to the app automatically; on a bare VPS, put Nginx or Caddy in front for TLS termination and forward to `PORT`). `app.set("trust proxy", 1)` is already configured for exactly this single-hop-reverse-proxy scenario — do not add a second proxy layer in front of that without adjusting the trust-proxy hop count, or `req.ip`/rate-limiting will see the wrong client IP.
 
@@ -1024,7 +1076,7 @@ npm start                     # node dist/server.js
 - [ ] Set `JWT_SECRET` to a long random value — never rely on the hardcoded fallback.
 - [ ] Set `CORS_ORIGIN` explicitly to the real frontend domain(s), comma-separated if more than one (e.g. `https://example.org,https://www.example.org`) — leaving it unset makes the API unreachable from any browser, not "open," but still must be set correctly for the real site to work.
 - [ ] Set `APP_BASE_URL` and `APP_PUBLIC_URL` to the real backend/frontend URLs respectively (affects media URLs and password-reset links).
-- [ ] Decide on and provision persistent storage for `UPLOAD_DIR` (volume or migrate to object storage) — do this **before** the first real content upload, not after.
+- [ ] Set the three `CLOUDINARY_*` env vars (§8.1) **before** the first real content upload — new uploads go straight to Cloudinary now, not local disk (§3.9), so this replaces the old "provision a persistent volume" step. `UPLOAD_DIR` only still matters for pre-migration files.
 - [ ] Run `npx prisma migrate deploy` against the production database before first boot.
 - [ ] Log in with the bootstrap admin, configure SMTP under Settings, then create named admin/editor accounts and stop using the bootstrap account day-to-day.
 - [ ] Consider closing the SVG-upload-adjacent and unpublished-content-exposure gaps noted in §16 before a public launch.
@@ -1064,9 +1116,11 @@ No frontend dependency appears entirely unused — `web-vitals` is installed and
 | `@prisma/client` | runtime | generated database client |
 | `cors` | runtime | CORS middleware (§3.1) |
 | `express-rate-limit` | runtime | login/reset/public-write throttling (`middleware/rateLimit.ts`) |
-| `multer` | runtime | file upload handling (`middleware/upload.ts`) |
+| `multer` | runtime | multipart parsing into an in-memory buffer (`middleware/upload.ts`) — since the Cloudinary migration this no longer writes to disk, see §3.9 |
+| `cloudinary` | runtime | media hosting SDK — `lib/cloudinary.ts` config + `routes/media.ts`'s `uploader.upload_stream` call |
+| `dotenv` | runtime | used directly by `prisma.config.ts` for the Prisma CLI's own process; the app itself still uses the separate hand-rolled `loadEnv.ts` (both coexist — see §3.1) |
 | `nodemailer` | runtime | SMTP email sending (`utils/mailer.ts`) |
-| `uuid` | runtime | **declared but not imported anywhere in `backend/src`** — appears unused; file naming in `middleware/upload.ts` uses `Date.now()` + `Math.random()` instead of `uuid` |
+| `uuid` | runtime | **declared but not imported anywhere in `backend/src`** — appears unused; file naming in `middleware/upload.ts` uses `Date.now()` + `Math.random()` instead of `uuid` (still true as of the August 2026 update) |
 | `prisma` | devDependency | the Prisma CLI (`migrate`, `generate`, `studio`) |
 | `ts-node-dev` | devDependency | hot-reloading dev server (`npm run dev`) |
 | `typescript` | devDependency | compiles `src/` → `dist/` for production |
@@ -1154,7 +1208,7 @@ For whoever takes over hosting/operating this project:
 - [ ] `backend/.env.example` and `fpi/.env.example` — templates to copy into real `.env` files (never commit the real ones).
 
 **Environment variables to set on the new host** (see §8 for full detail):
-- [ ] Backend: `DATABASE_URL`, `PORT`, `APP_BASE_URL`, `APP_PUBLIC_URL`, `UPLOAD_DIR`, `CORS_ORIGIN`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`.
+- [ ] Backend: `DATABASE_URL`, `PORT`, `APP_BASE_URL`, `APP_PUBLIC_URL`, `UPLOAD_DIR`, `CORS_ORIGIN`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
 - [ ] Frontend: `REACT_APP_API_URL` (set **before** running the build — it's compiled in, not read at runtime).
 
 **Build commands**:
@@ -1175,5 +1229,60 @@ For whoever takes over hosting/operating this project:
 - [ ] Create at least one `Province` per name (Lusaka, Southern, Eastern, Copperbelt) if using the hub-seeding endpoint, then `POST /api/seed/hubs` (authenticated) to populate default hubs.
 - [ ] Configure SMTP under Admin → Settings so password-reset emails actually send (otherwise reset links only ever reach the server console log — the new host needs log access for the very first reset).
 - [ ] Create named `User` accounts under Admin → Users; stop relying on the bootstrap env-based account for daily use.
-- [ ] Provision persistent storage for `UPLOAD_DIR` (or migrate uploads to an object store) before the first real content upload — this is the single most common "worked in dev, broke in prod" surprise for this project.
+- [ ] Set the `CLOUDINARY_*` env vars before the first real content upload — uploads go to Cloudinary now (§3.9), not local disk, so this has replaced "provision persistent storage" as the thing to get right before launch. Also confirm the Cloudinary account has **"Allow delivery of PDF and ZIP files"** enabled under Settings → Security — without it, `raw`-type uploads (PDFs/Word docs) 401 on delivery even though they uploaded successfully; see §18.2.
 - [ ] Confirm the SPA rewrite rule is active on the frontend host so deep links into `/admin/*` don't 404 on refresh.
+
+---
+
+## 18. August 2026 Update Log
+
+Everything in this section happened after the original 2026-07-19 audit, in a single extended session. It's grouped by area, most consequential first, so a reader can skim to what matters to them without re-reading the whole document.
+
+### 18.0 Summary of feature/content changes
+
+- **Media pipeline moved to Cloudinary** (§3.9, §4.5) — was planned/in-progress at audit time (`backend/CLOUDINARY_MIGRATION.md`), is now live: uploads go straight to Cloudinary, `Media.filename`/`Media.url` store Cloudinary identifiers, and a new `/api/media/proxy` route makes Cloudinary's `raw` (PDF/doc) delivery behave like a normal same-origin download/preview.
+- **Hub Photos and Hub Events got real admin UI** (§5.2, §4.3) — both models and their `/api/hub-photos`/`/api/hub-events` routes existed since the original hub system was built, but nothing in the frontend ever called them. `HubPhotos.tsx` and `HubEvents.tsx` (both new) close that gap. The public hub detail page's photo grid is now a Swiper slideshow instead of a static grid, and gained a `coordinatorImage` field for the hub coordinator's photo.
+- **`HubEvent.eventType`** (new field, default `"Community"`) — the public MIL Hubs "Impact at a Glance" stats for "Training Sessions" and "Community Events" were previously hardcoded placeholder numbers; they're now computed live from real `HubEvent` rows filtered by this field.
+- **Newsletter model brought in line with the other document models** — gained `description`, `image`, `published`, `updatedAt`, and a new `publishDate` field (lets an admin backdate an issue to when it actually went out, independent of `createdAt`). `Report` gained `image` too.
+- **Program page sections gained image galleries and reordering** — `ProgramSection` (the JSON shape stored in `ProgramContent.sections`) gained an `images: string[]` field, reusing `ProjectGalleryPicker` (generalized with configurable label/help text) for the admin UI and `Lightbox` for the public gallery viewer. The admin "Add Section" button now **prepends** new sections to the front of the array instead of appending — this simultaneously fixed two complaints: new sections used to land at the bottom of a long admin form (requiring a scroll to find what you just added), and newest content used to display *last* on the public page (since the public renderer just walks the array in order). The 4 existing program pages' stored section order was also reversed once, retroactively, to match.
+- **Homepage gained a "Knowledge Centre" slideshow** — shows the latest published item from Reports/Newsletters/Publications/Press Statements, positioned right after the Media Highlights section, using the same Swiper pattern as the existing "Recent Activities" carousel.
+- **Homepage "Recent Activities" section reworked** — the category filter chip row above the carousel used to be a single non-functional "📋 All" pill (decorative only, nothing to filter by); it's now real, clickable category chips derived from actual activity data.
+- **`Resources.tsx` (public `/resources` page) fixed twice in this round**: first, its "Latest Resources" cards opened the raw Cloudinary URL directly in a new tab (forcing a download instead of using `DocumentPreviewModal` like every other knowledge-centre page); then, its no-live-data fallback content (3 hardcoded placeholder cards) all linked to a `/documents/resource.pdf` file that doesn't exist in `public/documents/` — a real dead end reported by a site visitor. Both are fixed: it uses `DocumentPreviewModal` now, and the empty state is a plain "No resources have been added yet" message matching every other knowledge-centre page, not fake data.
+- **Two latent field-name bugs fixed on `pages/mil/Hubs/HubDetail.tsx`**: the photo gallery read `photo.url` when the `HubPhoto` model's field is `imageUrl` (so photos silently never rendered, ever — this predates the August 2026 work and was only caught while building the new gallery slideshow), and the events list read `event.date` when the `HubEvent` model's field is `eventDate` (so event dates silently never rendered either).
+
+### 18.1 Hub Photos/Hub Events: orphaned routes are no longer orphaned
+
+The 2026-07-19 audit's "list of admin pages" implicitly assumed every mounted route had a frontend caller. `HubPhoto`/`HubEvent` were the one exception — real database models, real Express routes (`routes/hubPhotos.ts`, `routes/hubEvents.ts`), zero frontend code calling them, going back to whenever the hub system was originally built. If you're diffing this document against an older copy or against memory of the codebase, this is the one place where "no admin UI exists for X" flips to "it does now" — `pages/admin/HubPhotos.tsx` and `pages/admin/HubEvents.tsx`, both standalone list+inline-form pages (not nested inside `EditHub.tsx`), linked from the sidebar under "Media & Hubs".
+
+### 18.2 New known issue: Cloudinary account-level PDF/ZIP delivery restriction
+
+**Symptom**: a press statement (or any freshly-uploaded PDF) fails to preview or download, with the app's own `/media/proxy` route returning `502 {"message": "Failed to fetch file"}`.
+
+**Root cause, confirmed by direct testing**: Cloudinary has an account-level security setting ("Restricted media types" / "Allow delivery of PDF and ZIP files", under the Cloudinary Console → Settings → Security) that, when off, blocks **unauthenticated delivery of `raw`-type resources** — the exact resource type this app uses for PDFs/Word docs (§3.9). A blocked request comes back `401 Unauthorized` with header `X-Cld-Error: deny or ACL failure`, which the backend's `/media/proxy` route (itself doing a server-side `fetch()` to Cloudinary) turns into a `502` for the browser.
+
+This is **not** related to the file's extension or its Cloudinary `public_id` — that was the first, incorrect hypothesis during investigation (an earlier version of `routes/media.ts` embedded the file extension into the `public_id` for raw uploads, e.g. `.../abc123.pdf`; removing that embedding, which is now the shipped behavior described in §3.9, was a reasonable independent cleanup but **does not** fix this issue). The real signal: an older asset uploaded before this restriction was toggled on for the account still returns `200` (served from Cloudinary's CDN edge cache — confirmed via the `Server-Timing` response header showing a cache `hit`), while an identical fresh upload — with or without an extension in its URL — reliably returns `401` direct from origin.
+
+**This is unresolved as of this document's last update.** Two ways to fix it, neither implemented yet:
+1. **(Simplest)** Toggle "Allow delivery of PDF and ZIP files" on in the Cloudinary Console for this account. Zero code changes; takes effect immediately for both old and new files once toggled.
+2. **(More robust, more work)** Switch raw-file delivery to Cloudinary's signed/authenticated URLs (`type: "authenticated"` + `cloudinary.utils.private_download_url()` or a signed delivery URL generated server-side per request) so delivery doesn't depend on this account-wide toggle at all. Not started.
+
+Whoever operates the Cloudinary account for this project should check that setting before assuming "PDF preview is broken" is a code bug — it likely isn't.
+
+### 18.3 New known issue: `tsc` does not actually run against `tsconfig.json` as committed
+
+**Symptom**: running `npx tsc --noEmit -p .` from the frontend root fails immediately with:
+```
+tsconfig.json(15,25): error TS6046: Argument for '--moduleResolution' option must be: 'node', 'classic', 'node16', 'nodenext'.
+tsconfig.json(17,5): error TS5070: Option '--resolveJsonModule' cannot be specified without 'node' module resolution strategy.
+```
+before checking a single file.
+
+**Root cause**: `tsconfig.json`'s `moduleResolution: "bundler"` is a TypeScript 5.0+ feature; `typescript` in `package.json` is pinned to `4.9.5` (confirmed via `node_modules/.bin/tsc --version`). The installed compiler doesn't recognize the value at all and refuses to run.
+
+**Practical implication**: any command that shells out to the frontend's own `tsc` — including a plain `npx tsc --noEmit` a developer might run to sanity-check their work — fails at the config-parsing stage, before it evaluates any source file. It is easy to mistake this for "no errors" if you only check the exit code or grep the output for a specific filename (the error is about `tsconfig.json` itself, not about any `.ts`/`.tsx` file, so a filename-scoped grep finds nothing and looks clean). **This does not necessarily mean type errors go completely unnoticed** — `react-scripts start`/`build` bundles its own `fork-ts-checker-webpack-plugin` wiring that may behave differently, and this was not independently verified either way during this session — but it does mean **a direct `tsc` invocation is not a trustworthy verification step in this repo today**, contrary to what a developer would normally assume.
+
+**Not fixed as of this document's last update**, to avoid bundling an unrelated toolchain upgrade into unrelated feature work. Two ways to fix it:
+1. Change `moduleResolution` in `tsconfig.json` to `"node"` (matches what CRA itself typically expects for TS 4.x) — smallest possible change, but should be verified against a real `npm run build` afterward in case anything in the codebase actually relies on `"bundler"` resolution semantics.
+2. Upgrade `typescript` to `^5.x` — larger change, needs a full `npm run build` + manual smoke test afterward since CRA/react-scripts 5.0.1's own TypeScript support has known version-compatibility edges.
+
+Either way: **before doing a large refactor or claiming "no type errors" anywhere in this codebase, verify which of the two is true first.**

@@ -6,8 +6,8 @@ Full-stack website and content management system for Free Press Initiative Zambi
 
 - Frontend: React, TypeScript, Tailwind CSS, Create React App
 - Backend: Express, TypeScript, Prisma
-- Database: PostgreSQL
-- Uploads: local backend `src/uploads` directory in development
+- Database: PostgreSQL (hosted on Neon)
+- Uploads: Cloudinary (images, PDFs/docs, audio) — see `backend/CLOUDINARY_MIGRATION.md`. Local backend `src/uploads` is legacy-only, kept so files uploaded before the Cloudinary migration keep resolving; nothing new is written there
 
 ## Requirements
 
@@ -29,14 +29,19 @@ Create the backend environment file:
 cp backend/.env.example backend/.env
 ```
 
-Update `backend/.env` with your real database URL and admin login:
+Update `backend/.env` with your real database URL, admin login, and Cloudinary credentials:
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public
 JWT_SECRET=use-a-long-random-secret
 ADMIN_EMAIL=your-admin-email@example.com
 ADMIN_PASSWORD=your-secure-password
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
+
+All uploads (images, PDFs/docs, audio) go straight to Cloudinary — without these three set, every upload in the CMS fails. Get them from your Cloudinary account's dashboard (Settings → API Keys).
 
 For local development, keep:
 
@@ -135,9 +140,9 @@ Frontend:
 
 Backend:
 
-- Deploy the `backend` folder to Render, Railway, Fly.io, a VPS, or another Node host.
-- Set `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `APP_BASE_URL`, and `CORS_ORIGIN`.
-- Use persistent storage or external object storage for uploads in production.
+- Deploy the `backend` folder to Render, Railway, Fly.io, a VPS, or another Node host — it needs a persistent, long-running Node process, not a serverless-function-only host.
+- Set `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `APP_BASE_URL`, `CORS_ORIGIN`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
+- Uploads go to Cloudinary, so there's no local/persistent-disk storage to provision for new content. In your Cloudinary account, confirm **Settings → Security → "Allow delivery of PDF and ZIP files"** is enabled, or PDF/document previews and downloads will fail even though the upload itself succeeds.
 
 ## Security
 
@@ -145,6 +150,12 @@ Backend:
 - Public read-only API requests remain open.
 - Change `JWT_SECRET` and `ADMIN_PASSWORD` before production.
 - Restrict `CORS_ORIGIN` to the real frontend domain in production.
-"# fpi" 
-"# fpi" 
+
+## More documentation
+
+- `ARCHITECTURE_AND_HANDOVER.md` — full technical deep-dive: every route, every database model, request lifecycles, and known issues.
+- `HANDOVER.md` — a shorter, action-oriented pre-launch/ops checklist.
+- `PASSWORD_RECOVERY.md` — how the "forgot password" flow actually works end to end.
+- `CLAUDE.md` — quick orientation notes for AI coding assistants working in this repo.
+- `backend/CLOUDINARY_MIGRATION.md` — history of the move from local-disk uploads to Cloudinary.
 "# fpi" 

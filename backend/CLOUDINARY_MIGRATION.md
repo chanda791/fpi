@@ -1,5 +1,13 @@
 # Cloudinary Migration Plan
 
+> **Status as of 2026-08-08: Phases 1 and 2 are complete and live** — `POST /api/media` uploads straight to Cloudinary via an in-memory buffer (no more `multer.diskStorage`), and `GET /api/media/proxy` was added (not in the original phase plan below) to make Cloudinary's `raw`-type delivery behave like a normal in-app preview/download. Phase 3 (migrating the ~31 pre-existing local files) remains explicitly skipped, as decided below. Phases 4-5 (cleanup, verification checklist) were not formally executed as written, but their intent is largely covered elsewhere: `ARCHITECTURE_AND_HANDOVER.md` and `CLAUDE.md` were updated to describe the current Cloudinary-backed implementation, and the local `UPLOAD_DIR`/static-serving code was deliberately **kept**, not removed, specifically so the un-migrated Phase-3 files keep resolving — removing it would break them.
+>
+> **One new problem was discovered post-migration, not anticipated by this plan**: Cloudinary has an account-level "Restricted media types" security setting that, when the "Allow delivery of PDF and ZIP files" toggle is off, blocks unauthenticated delivery of `raw`-type resources (`401`, `X-Cld-Error: deny or ACL failure`) — this affects every `raw` upload (PDFs/Word docs) made through this app, not just ones with a particular filename. Full diagnostic writeup, and the two ways to fix it (toggle the Cloudinary setting, or move to signed/authenticated delivery), are in `ARCHITECTURE_AND_HANDOVER.md` §18.2. **This is unresolved** — whoever has access to the Cloudinary account for this project should check that setting.
+>
+> A related, now-resolved false lead from the same investigation: an earlier version of `routes/media.ts` embedded the file's extension into the Cloudinary `public_id` for raw uploads (e.g. `.../abc123.pdf`) as a workaround for Cloudinary not inferring a Content-Type on raw resources. That embedding was removed — it doesn't cause the 401 above (confirmed by testing: renaming an already-blocked asset to drop the extension did not fix it), but it was an unnecessary practice worth dropping anyway since the `/media/proxy` route already reconstructs the correct filename/extension via `Content-Disposition` on the way out.
+
+---
+
 Goal: move all **image** and **document** (PDF/Word) uploads off local disk
 (`UPLOAD_DIR` / `backend/src/uploads`) onto Cloudinary, since Render's
 filesystem is ephemeral and wipes uploads on every redeploy/restart.
