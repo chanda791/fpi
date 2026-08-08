@@ -20,6 +20,7 @@ const EditPressStatement = () => {
     title: "",
     description: "",
     fileUrl: "",
+    image: "",
     published: true,
     category: "Press Statement",
   });
@@ -40,6 +41,7 @@ const EditPressStatement = () => {
           title: data.title || "",
           description: data.description || "",
           fileUrl: data.fileUrl || "",
+          image: data.image || "",
           published: data.published ?? true,
           category: "Press Statement",
         });
@@ -62,6 +64,7 @@ const EditPressStatement = () => {
         title: form.title,
         description: form.description,
         fileUrl: form.fileUrl,
+        image: form.image,
         published: form.published,
       });
 
@@ -100,6 +103,7 @@ const EditPressStatement = () => {
           update={update}
           loading={saving}
           onSubmit={submit}
+          showImage
         />
 
       </PageCard>

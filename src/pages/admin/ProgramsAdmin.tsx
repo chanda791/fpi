@@ -7,6 +7,8 @@ import PageCard from "../../components/admin/PageCard";
 import Input from "../../components/admin/Input";
 import TextArea from "../../components/admin/TextArea";
 import ImageUpload from "../../components/admin/ImageUpload";
+import DocumentUpload from "../../components/admin/document/DocumentUpload";
+import ProjectGalleryPicker from "../../components/admin/project/ProjectGalleryPicker";
 import PrimaryButton from "../../components/admin/PrimaryButton";
 import SecondaryButton from "../../components/admin/SecondaryButton";
 import Loading from "../../components/admin/Loading";
@@ -48,16 +50,22 @@ const ProgramsAdmin = () => {
   const update = (field: keyof ProgramContent, value: any) =>
     setData((prev) => (prev ? { ...prev, [field]: value } : prev));
 
-  const updateSection = (idx: number, field: keyof ProgramSection, value: string) => {
+  const updateSection = (idx: number, field: keyof ProgramSection, value: string | string[]) => {
     if (!data) return;
     const sections = [...(data.sections || [])];
     sections[idx] = { ...sections[idx], [field]: value };
     setData({ ...data, sections });
   };
 
+  // New sections are added to the front, not the back -- so the section you
+  // just added is the one you land on (no scrolling past everything else to
+  // find it), and it's also the one that shows first on the public page.
   const addSection = () => {
     if (!data) return;
-    setData({ ...data, sections: [...(data.sections || []), { heading: "", body: "", image: "" }] });
+    setData({
+      ...data,
+      sections: [{ heading: "", body: "", image: "", images: [], fileUrl: "" }, ...(data.sections || [])],
+    });
   };
 
   const removeSection = (idx: number) => {
@@ -122,8 +130,13 @@ const ProgramsAdmin = () => {
             <TextArea label="Introduction" name="intro" rows={4} value={data.intro || ""} onChange={(e) => update("intro", e.target.value)} />
 
             <div className="pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-slate-800">Content Sections</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-bold text-slate-800">Content Sections</h3>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Newest section first -- that's also the order visitors see them in.
+                  </p>
+                </div>
                 <SecondaryButton onClick={addSection}>
                   <Plus size={16} className="mr-1" /> Add Section
                 </SecondaryButton>
@@ -133,19 +146,43 @@ const ProgramsAdmin = () => {
                 <p className="text-slate-400 text-sm">No sections yet. Add one to build out the page.</p>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {(data.sections || []).map((section, idx) => (
-                  <div key={idx} className="border rounded-2xl p-5 bg-slate-50 relative">
-                    <button
-                      onClick={() => removeSection(idx)}
-                      className="absolute top-4 right-4 p-1.5 rounded-lg bg-red-100 text-red-700"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                    <div className="space-y-4">
+                  <div key={idx} className="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between gap-3 px-5 py-4 bg-slate-50 border-b border-slate-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-8 h-8 shrink-0 rounded-full bg-[#C9293A]/10 text-[#C9293A] font-bold text-sm flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <span className="font-semibold text-slate-700 truncate">
+                          {section.heading || "Untitled Section"}
+                        </span>
+                        {idx === 0 && (
+                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                            Shown First
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeSection(idx)}
+                        className="shrink-0 p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                        title="Remove section"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+
+                    <div className="p-5 space-y-5">
                       <Input label="Section Heading" name={`h-${idx}`} value={section.heading || ""} onChange={(e) => updateSection(idx, "heading", e.target.value)} />
                       <TextArea label="Section Text" name={`b-${idx}`} rows={4} value={section.body || ""} onChange={(e) => updateSection(idx, "body", e.target.value)} />
-                      <ImageUpload label="Section Image (optional)" value={section.image} onChange={(url) => updateSection(idx, "image", url)} />
+                      <ImageUpload label="Cover Image (optional)" value={section.image} onChange={(url) => updateSection(idx, "image", url)} />
+                      <ProjectGalleryPicker
+                        value={section.images || []}
+                        onChange={(urls) => updateSection(idx, "images", urls)}
+                        label="Gallery Images (optional)"
+                        helpText="Add extra photos for this section. They open in a gallery when a visitor reads more."
+                      />
+                      <DocumentUpload value={section.fileUrl || ""} onChange={(url) => updateSection(idx, "fileUrl", url)} />
                     </div>
                   </div>
                 ))}

@@ -17,6 +17,7 @@ const CreatePressStatement = () => {
     title: "",
     description: "",
     fileUrl: "",
+    image: "",
     published: true,
     category: "Press Statement",
   });
@@ -36,6 +37,7 @@ const CreatePressStatement = () => {
         title: form.title,
         description: form.description,
         fileUrl: form.fileUrl,
+        image: form.image,
         published: form.published,
       });
 
@@ -72,6 +74,7 @@ const CreatePressStatement = () => {
           update={update}
           loading={loading}
           onSubmit={submit}
+          showImage
         />
 
       </PageCard>

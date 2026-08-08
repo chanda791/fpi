@@ -5,12 +5,14 @@ import {
   Mail,
 } from "lucide-react";
 import { API_BASE_URL } from "../../services/config";
+import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
 interface PressStatement {
   id: number;
   title: string;
   description?: string;
   fileUrl: string;
+  image?: string;
   published: boolean;
   createdAt: string;
 }
@@ -152,6 +154,7 @@ const PressStatements = () => {
   const [statements, setStatements] = useState<PressStatement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PressStatement | null>(null);
+  const [previewing, setPreviewing] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/press-statements`)
@@ -300,14 +303,14 @@ const PressStatements = () => {
       {selected && (
         <div
           className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
-          onClick={() => setSelected(null)}
+          onClick={() => { setSelected(null); setPreviewing(false); }}
         >
           <div
             className="bg-white rounded-3xl max-w-lg w-full p-8 relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={() => setSelected(null)}
+              onClick={() => { setSelected(null); setPreviewing(false); }}
               className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 text-2xl leading-none"
             >
               &times;
@@ -323,21 +326,35 @@ const PressStatements = () => {
                 day: "numeric",
               })}
             </p>
+            {selected.image && (
+              <img
+                src={selected.image}
+                alt={selected.title}
+                className="w-full max-h-96 object-contain rounded-2xl mb-5 bg-gray-50"
+              />
+            )}
             <p className="text-gray-600 leading-relaxed mb-6 whitespace-pre-line">
               {selected.description}
             </p>
             {selected.fileUrl && (
-              <a
-                href={selected.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => setPreviewing(true)}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:-translate-y-0.5 transition"
               >
-                Open Full Statement <ArrowRight size={15} />
-              </a>
+                Review Full Statement <ArrowRight size={15} />
+              </button>
             )}
           </div>
         </div>
+      )}
+
+      {selected && previewing && selected.fileUrl && (
+        <DocumentPreviewModal
+          fileUrl={selected.fileUrl}
+          title={selected.title}
+          onClose={() => setPreviewing(false)}
+        />
       )}
 
       {/* ========== MEDIA CONTACT ========== */}

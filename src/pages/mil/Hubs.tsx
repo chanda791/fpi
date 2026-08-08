@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   MapPin,
   Users,
@@ -5,6 +6,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../services/config";
 
 // ─── Original data — untouched ────────────────────────────────
 const provinces = [
@@ -32,12 +34,7 @@ const features = [
   },
 ];
 
-const stats = [
-  { num: "13+",    label: "MIL Hubs" },
-  { num: "5,000+", label: "Citizens Reached" },
-  { num: "100+",   label: "Training Sessions" },
-  { num: "50+",    label: "Community Events" },
-];
+const formatStat = (n: number) => (n > 0 ? `${n.toLocaleString()}+` : "0");
 
 // ─── Single background image (same as Brochure pattern) ──────
 const BG = "/images/mil.jpg";
@@ -272,6 +269,30 @@ const SectionDivider = ({ left, right }: { left: string; right: string }) => (
 
 // ─── Main component ───────────────────────────────────────────
 const Hubs = () => {
+  const [stats, setStats] = useState([
+    { num: "0", label: "MIL Hubs" },
+    { num: "0", label: "Citizens Reached" },
+    { num: "0", label: "Training Sessions" },
+    { num: "0", label: "Community Events" },
+  ]);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/hubs`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        const publishedHubs = (Array.isArray(data) ? data : []).filter((h) => h.published);
+        const events = publishedHubs.flatMap((h) => h.events || []);
+
+        setStats([
+          { num: formatStat(publishedHubs.length), label: "MIL Hubs" },
+          { num: formatStat(publishedHubs.reduce((sum, h) => sum + (h.participants || 0), 0)), label: "Citizens Reached" },
+          { num: formatStat(events.filter((e) => e.eventType === "Training").length), label: "Training Sessions" },
+          { num: formatStat(events.filter((e) => e.eventType === "Community").length), label: "Community Events" },
+        ]);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   return (
     <div style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif", color: "#1A0A00" }}>
 

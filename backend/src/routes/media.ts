@@ -55,6 +55,108 @@ router.get("/", async (_req, res) => {
   }
 });
 
+const EXTENSION_BY_MIME: Record<string, string> = {
+  "application/pdf": "pdf",
+  "application/msword": "doc",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-powerpoint": "ppt",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
+function sanitizeDownloadName(name: string) {
+  const safe = name.replace(/[^a-zA-Z0-9-_ ]+/g, "").trim().replace(/\s+/g, "_");
+  return safe || "download";
+}
+
+/**
+ * PROXY / DOWNLOAD FILE
+ *
+ * Cloudinary's "raw" delivery (used for PDFs/docs) always sends
+ * Content-Disposition: attachment and ignores on-the-fly transformations,
+ * so a raw file can never be shown inline (e.g. in a preview <iframe>) and
+ * its filename can't be customized by manipulating the Cloudinary URL.
+ * Streaming the file through our own server lets us set both explicitly.
+ */
+router.get("/proxy", async (req, res) => {
+  try {
+    const sourceUrl = typeof req.query.url === "string" ? req.query.url : "";
+    const mode = req.query.mode === "inline" ? "inline" : "attachment";
+
+    let parsed: URL;
+    try {
+      parsed = new URL(sourceUrl);
+    } catch {
+      return res.status(400).json({ message: "Invalid file url" });
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+
+    // Only ever proxy our own Cloudinary assets -- never an arbitrary
+    // attacker-supplied URL (this endpoint has no auth requirement).
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.hostname !== "res.cloudinary.com" ||
+      !cloudName ||
+      !parsed.pathname.startsWith(`/${cloudName}/`)
+    ) {
+      return res.status(400).json({ message: "File url not allowed" });
+    }
+
+    const upstream = await fetch(parsed.toString());
+
+    if (!upstream.ok || !upstream.body) {
+      return res.status(502).json({ message: "Failed to fetch file" });
+    }
+
+    const upstreamType = (upstream.headers.get("content-type") || "").split(";")[0].trim();
+    const ext =
+      EXTENSION_BY_MIME[upstreamType] ||
+      path.extname(parsed.pathname).replace(".", "").toLowerCase() ||
+      // This app's raw uploads are overwhelmingly PDFs, and legacy assets
+      // uploaded before extensions were embedded in the public_id come
+      // back from Cloudinary as generic octet-stream with no clue to their
+      // real type -- defaulting to pdf is the best guess available.
+      "pdf";
+
+    // Same reasoning: force a renderable Content-Type for inline preview
+    // when Cloudinary couldn't tell us one, so the browser's PDF viewer
+    // actually opens the iframe content instead of trying to download it.
+    const contentType =
+      upstreamType && upstreamType !== "application/octet-stream"
+        ? upstreamType
+        : mode === "inline"
+        ? "application/pdf"
+        : upstreamType || "application/octet-stream";
+
+    const requestedName =
+      typeof req.query.filename === "string" && req.query.filename
+        ? sanitizeDownloadName(req.query.filename)
+        : "download";
+
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Disposition", `${mode}; filename="${requestedName}.${ext}"`);
+
+    const contentLength = upstream.headers.get("content-length");
+    if (contentLength) {
+      res.setHeader("Content-Length", contentLength);
+    }
+
+    Readable.fromWeb(upstream.body as any).pipe(res);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to proxy file",
+    });
+  }
+});
+
 /**
  * GET SINGLE MEDIA
  */
@@ -103,17 +205,12 @@ router.post(
         resource_type: resourceType,
       };
 
-      // Unlike image/video, Cloudinary's "raw" delivery does not infer a
-      // Content-Type or attach a file extension to the public_id on its
-      // own -- without one, PDFs/docs come back as application/octet-stream
-      // and download with no extension. Embedding the original extension in
-      // the public_id is Cloudinary's documented workaround.
-      if (resourceType === "raw") {
-        const ext = path.extname(req.file.originalname);
-        if (ext) {
-          uploadOptions.public_id = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-        }
-      }
+      // Note: raw public_ids are deliberately left without a file extension.
+      // Cloudinary blocks unauthenticated delivery of raw resources whose
+      // URL ends in .pdf/.zip/etc (401 "deny or ACL failure") as a security
+      // measure, so embedding the extension here would make every raw
+      // upload undownloadable. The /media/proxy route below reconstructs
+      // the correct Content-Type/filename on the way out instead.
 
       const result = await uploadBufferToCloudinary(req.file.buffer, uploadOptions);
 

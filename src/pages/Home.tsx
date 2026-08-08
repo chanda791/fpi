@@ -18,14 +18,22 @@ import {
   Map,
   Video,
   Headphones,
-  PlayCircle
+  PlayCircle,
+  Mail,
+  Newspaper,
 } from "lucide-react";
-
 
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
+
+const knowledgeIcons: Record<string, any> = {
+  Report: FileText,
+  Newsletter: Mail,
+  Publication: BookOpen,
+  "Press Statement": Newspaper,
+};
 
 type Activity = {
   id: number;
@@ -131,16 +139,20 @@ const Home = () => {
     { title: string; value: string }[]
   >([]);
   const [cmsFeaturedProjects, setCmsFeaturedProjects] = useState<
-    { id: number; title: string; description: string; image?: string }[]
+    { id: number; title: string; description: string; image?: string; category?: string; status?: string }[]
   >([]);
   const [cmsGalleryImages, setCmsGalleryImages] = useState<string[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [knowledgeItems, setKnowledgeItems] = useState<
+    { category: string; title: string; description?: string; image?: string; date: string; link: string }[]
+  >([]);
   const [commentForm, setCommentForm] = useState({ name: "", role: "", message: "" });
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [commentDone, setCommentDone] = useState(false);
   const [activitySettings, setActivitySettings] = useState<{
     count: number;
   }>({ count: 6 });
+  const [activeCategory, setActiveCategory] = useState("All");
 
   const heroSlides = [
     {
@@ -313,6 +325,51 @@ const Home = () => {
       .catch((err) => console.error(err));
   }, []);
 
+  useEffect(() => {
+    const pickLatest = (items: any[], dateField: string) => {
+      const published = (Array.isArray(items) ? items : []).filter((i) => i.published);
+      if (published.length === 0) return null;
+      published.sort(
+        (a, b) => new Date(b[dateField] || b.createdAt).getTime() - new Date(a[dateField] || a.createdAt).getTime()
+      );
+      return published[0];
+    };
+
+    Promise.all([
+      fetch(`${API_BASE_URL}/reports`).then((r) => r.json()).catch(() => []),
+      fetch(`${API_BASE_URL}/newsletters`).then((r) => r.json()).catch(() => []),
+      fetch(`${API_BASE_URL}/publications`).then((r) => r.json()).catch(() => []),
+      fetch(`${API_BASE_URL}/press-statements`).then((r) => r.json()).catch(() => []),
+    ])
+      .then(([reports, newsletters, publications, pressStatements]) => {
+        const sources: {
+          category: string;
+          item: any;
+          dateField: string;
+          link: string;
+        }[] = [
+          { category: "Report", item: pickLatest(reports, "createdAt"), dateField: "createdAt", link: "/knowledge/reports" },
+          { category: "Newsletter", item: pickLatest(newsletters, "publishDate"), dateField: "publishDate", link: "/knowledge/newsletters" },
+          { category: "Publication", item: pickLatest(publications, "createdAt"), dateField: "createdAt", link: "/knowledge/publications" },
+          { category: "Press Statement", item: pickLatest(pressStatements, "createdAt"), dateField: "createdAt", link: "/knowledge/press-statements" },
+        ];
+
+        setKnowledgeItems(
+          sources
+            .filter((s) => s.item)
+            .map((s) => ({
+              category: s.category,
+              title: s.item.title,
+              description: s.item.description,
+              image: s.item.image,
+              date: s.item[s.dateField] || s.item.createdAt,
+              link: s.link,
+            }))
+        );
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   const submitComment = async () => {
     if (!commentForm.name.trim() || !commentForm.message.trim()) {
       alert("Please fill in your name and comment.");
@@ -345,7 +402,11 @@ const Home = () => {
     { icon: Users, title: "Community Engagement", description: "Building partnerships between journalists, communities, civil society and public institutions.", color: "#F59E0B" },
   ];
 
-  const recentActivities = activities.slice(0, activitySettings.count || 6);
+  const activityCategories = ["All", ...Array.from(new Set(activities.map((a) => a.category).filter(Boolean)))];
+
+  const recentActivities = (
+    activeCategory === "All" ? activities : activities.filter((a) => a.category === activeCategory)
+  ).slice(0, activitySettings.count || 6);
 
   const welcomeRef = useScrollReveal();
   const aboutRef = useScrollReveal();
@@ -663,70 +724,119 @@ const Home = () => {
       </motion.section>
 
       {/* ========== ACTIVITIES SECTION ========== */}
-      <section style={{ padding: "50px 20px", background: "#F8FAFF" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 30 }}>
+      <section style={{ position: "relative", padding: "60px 20px", background: "linear-gradient(180deg,#F8FAFF 0%,#F1F5FF 100%)", overflow: "hidden" }}>
+        {/* Decorative glow accents, matching the hero/highlights treatment */}
+        <div style={{ position: "absolute", top: -60, left: -60, width: 320, height: 320, borderRadius: "50%", background: "rgba(37,99,235,0.10)", filter: "blur(90px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -60, width: 360, height: 360, borderRadius: "50%", background: "rgba(234,88,12,0.10)", filter: "blur(100px)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", maxWidth: 1120, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
             <Eyebrow label="Latest Initiatives" />
             <h2 style={{ fontFamily: "Georgia,serif", fontWeight: 800, fontSize: "clamp(1.4rem, 3.5vw, 2rem)", marginBottom: 6 }}>Recent Activities</h2>
             <p style={{ color: "#6B7280", fontSize: 13, maxWidth: 460, margin: "0 auto" }}>The latest from FPI Zambia's work across the country.</p>
           </div>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-            <span
-              style={{
-                padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 500, border: "none",
-                background: "linear-gradient(135deg,#2563EB,#EA580C)", color: "#fff", boxShadow: "0 2px 6px rgba(37,99,235,0.3)",
-              }}
-            >
-              📋 All
-            </span>
-          </div>
+
+          {activityCategories.length > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 8, marginBottom: 36 }}>
+              {activityCategories.map((cat) => {
+                const active = cat === activeCategory;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    style={{
+                      padding: "7px 16px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      border: active ? "none" : "1px solid #E2E8F0",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      background: active ? "linear-gradient(135deg,#2563EB,#EA580C)" : "#fff",
+                      color: active ? "#fff" : "#4B5563",
+                      boxShadow: active ? "0 4px 14px rgba(37,99,235,0.35)" : "0 1px 3px rgba(0,0,0,0.04)",
+                    }}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {loading && (
             <div style={{ textAlign: "center", padding: "30px 0" }}>
               <div style={{ width: 28, height: 28, borderRadius: "50%", border: "3px solid #2563EB", borderRightColor: "transparent", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
             </div>
           )}
           {error && <div style={{ textAlign: "center", color: "#DC2626", padding: 20, fontSize: 13 }}>Error: {error}</div>}
-          {!loading && !error && (
-            <Swiper
-              modules={[Autoplay, Pagination, Navigation]}
-              spaceBetween={20}
-              slidesPerView={1}
-              navigation
-              pagination={{ clickable: true }}
-              autoplay={{ delay: 4000, disableOnInteraction: false }}
-              breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }}
-              className="act-swiper"
-              style={{ paddingBottom: 50 }}
-            >
-              {recentActivities.map((activity) => (
-                <SwiperSlide key={activity.id}>
-                  <motion.div
-                    whileHover={{ y: -6, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", height: "100%", display: "flex", flexDirection: "column" }}
-                  >
-                    <div style={{ position: "relative", height: 140 }}>
-                      <img src={activity.image} alt={activity.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600"; }} />
-                      <span style={{ position: "absolute", top: 8, left: 8, background: "linear-gradient(135deg,#2563EB,#EA580C)", color: "#fff", fontSize: 9, fontWeight: 600, padding: "2px 8px", borderRadius: 20 }}>{activity.category}</span>
-                    </div>
-                    <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{activity.title}</h3>
-                      <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5, marginBottom: 12, flex: 1 }}>{activity.description.substring(0, 80)}...</p>
-                      <div style={{ borderTop: "1px solid #F0F0F0", paddingTop: 10, marginTop: "auto" }}>
-                        <div style={{ display: "flex", gap: 8, color: "#9CA3AF", fontSize: 10, marginBottom: 8 }}>
-                          <span><Calendar size={10} /> {formatActivityDate(activity.date)}</span>
-                          <span><MapPin size={10} /> {activity.location}</span>
-                          <span><Users size={10} /> {activity.participants}</span>
+          {!loading && !error && recentActivities.length === 0 && (
+            <p style={{ textAlign: "center", color: "#9CA3AF", fontSize: 13, padding: "20px 0" }}>No activities in this category yet.</p>
+          )}
+          {!loading && !error && recentActivities.length > 0 && (
+            <>
+              <Swiper
+                modules={[Autoplay, Pagination, Navigation]}
+                spaceBetween={22}
+                slidesPerView={1}
+                navigation
+                pagination={{ clickable: true }}
+                autoplay={{ delay: 4000, disableOnInteraction: false }}
+                breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }}
+                className="act-swiper"
+                style={{ paddingBottom: 50 }}
+              >
+                {recentActivities.map((activity) => (
+                  <SwiperSlide key={activity.id}>
+                    <motion.div
+                      whileHover={{ y: -8, boxShadow: "0 16px 36px rgba(15,23,42,0.14)" }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                      style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 18px rgba(15,23,42,0.06)", border: "1px solid #EEF2FF", height: "100%", display: "flex", flexDirection: "column" }}
+                    >
+                      <div style={{ position: "relative", height: 175 }}>
+                        <img src={activity.image} alt={activity.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600"; }} />
+                        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(8,12,26,0.55) 100%)" }} />
+                        <span style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#2563EB,#EA580C)", color: "#fff", fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>{activity.category}</span>
+                        <div style={{ position: "absolute", bottom: 10, left: 14, right: 14, display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.9)", fontSize: 10, fontWeight: 600 }}>
+                          <MapPin size={11} /> {activity.location}
                         </div>
-                        <Link to={`/activities/${activity.id}`} style={{ color: "#2563EB", fontSize: 11, fontWeight: 500, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          Learn More <ArrowRight size={10} />
-                        </Link>
                       </div>
-                    </div>
-                  </motion.div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                      <div style={{ padding: 18, display: "flex", flexDirection: "column", flex: 1 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{activity.title}</h3>
+                        <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, marginBottom: 14, flex: 1 }}>{activity.description.substring(0, 80)}...</p>
+                        <div style={{ borderTop: "1px solid #F0F0F0", paddingTop: 12, marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", gap: 10, color: "#9CA3AF", fontSize: 10 }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Calendar size={10} /> {formatActivityDate(activity.date)}</span>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Users size={10} /> {activity.participants}</span>
+                          </div>
+                          <Link
+                            to={`/activities/${activity.id}`}
+                            style={{ color: "#2563EB", fontSize: 11, fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}
+                          >
+                            Learn More <ArrowRight size={10} />
+                          </Link>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+                <Link
+                  to="/activities"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    border: "1px solid #DBE3FF", background: "#fff", color: "#1D4ED8",
+                    fontSize: 13, fontWeight: 600, padding: "10px 22px", borderRadius: 999,
+                    textDecoration: "none", boxShadow: "0 2px 8px rgba(37,99,235,0.08)",
+                  }}
+                >
+                  View All Activities <ArrowRight size={14} />
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -956,6 +1066,80 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ========== KNOWLEDGE CENTRE (latest from each section) ========== */}
+      {knowledgeItems.length > 0 && (
+        <section style={{ padding: "50px 20px", background: "#fff" }}>
+          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <Eyebrow label="Knowledge Centre" />
+              <h2 style={{ fontFamily: "Georgia,serif", fontWeight: 800, fontSize: "clamp(1.4rem, 3.5vw, 2rem)", marginBottom: 8 }}>
+                Latest From Our Knowledge Centre
+              </h2>
+              <p style={{ color: "#6B7280", fontSize: 13, maxWidth: 600, margin: "0 auto" }}>
+                The most recent report, newsletter, publication and press statement from FPI Zambia.
+              </p>
+            </div>
+
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              spaceBetween={20}
+              slidesPerView={1}
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 4500, disableOnInteraction: false }}
+              breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }}
+              style={{ paddingBottom: 40 }}
+            >
+              {knowledgeItems.map((item) => {
+                const Icon = knowledgeIcons[item.category] || FileText;
+                return (
+                  <SwiperSlide key={item.category}>
+                    <Link to={item.link} style={{ textDecoration: "none", color: "inherit" }}>
+                      <motion.div
+                        whileHover={{ y: -6, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                        style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", height: "100%", display: "flex", flexDirection: "column", border: "1px solid #F0F0F0" }}
+                      >
+                        <div style={{ position: "relative", height: 150 }}>
+                          {item.image ? (
+                            <img src={getAssetUrl(item.image)} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#F0F9FF,#FFF7ED)" }}>
+                              <Icon size={40} color="#EA580C" />
+                            </div>
+                          )}
+                          <span style={{ position: "absolute", top: 8, left: 8, background: "linear-gradient(135deg,#2563EB,#EA580C)", color: "#fff", fontSize: 9, fontWeight: 600, padding: "2px 8px", borderRadius: 20 }}>
+                            {item.category}
+                          </span>
+                        </div>
+                        <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
+                          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{item.title}</h3>
+                          {item.description && (
+                            <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5, marginBottom: 12, flex: 1 }}>
+                              {item.description.substring(0, 90)}...
+                            </p>
+                          )}
+                          <div style={{ borderTop: "1px solid #F0F0F0", paddingTop: 10, marginTop: "auto" }}>
+                            <div style={{ display: "flex", gap: 8, color: "#9CA3AF", fontSize: 10, marginBottom: 8 }}>
+                              <span>
+                                <Calendar size={10} />{" "}
+                                {new Date(item.date).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}
+                              </span>
+                            </div>
+                            <span style={{ color: "#2563EB", fontSize: 11, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              Read More <ArrowRight size={10} />
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          </div>
+        </section>
+      )}
+
       {/* ========== FOCUS AREAS ========== */}
       <motion.section
         ref={focusRef}
@@ -1059,39 +1243,68 @@ const Home = () => {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
                 gap: 24,
               }}
             >
               {cmsFeaturedProjects.map((project) => (
-                <Link
-                  key={project.id}
-                  to={`/projects/${project.id}`}
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    background: "#fff",
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
-                    display: "block",
-                  }}
-                >
-                  <div style={{ height: 180, overflow: "hidden" }}>
-                    <img
-                      src={project.image || "/images/activity-1.jpg"}
-                      alt={project.title}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  </div>
-                  <div style={{ padding: 20 }}>
-                    <h3 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, marginBottom: 8 }}>
-                      {project.title}
-                    </h3>
-                    <p style={{ color: "#6B7280", fontSize: 13, lineHeight: 1.6 }}>
-                      {project.description}
-                    </p>
-                  </div>
+                <Link key={project.id} to={`/projects/${project.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                  <motion.div
+                    whileHover={{ y: -8, boxShadow: "0 16px 36px rgba(15,23,42,0.14)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    style={{
+                      borderRadius: 18,
+                      overflow: "hidden",
+                      background: "#fff",
+                      boxShadow: "0 4px 18px rgba(15,23,42,0.06)",
+                      border: "1px solid #EEF2FF",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
+                      <img
+                        src={project.image || "/images/activity-1.jpg"}
+                        alt={project.title}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(8,12,26,0.55) 100%)" }} />
+                      {project.category && (
+                        <span style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#2563EB,#EA580C)", color: "#fff", fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+                          {project.category}
+                        </span>
+                      )}
+                      {project.status && (
+                        <span style={{ position: "absolute", bottom: 10, left: 14, color: "rgba(255,255,255,0.9)", fontSize: 10, fontWeight: 600 }}>
+                          {project.status}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ padding: 20, display: "flex", flexDirection: "column", flex: 1 }}>
+                      <h3 style={{ fontFamily: "Georgia,serif", fontWeight: 700, fontSize: 17, marginBottom: 8 }}>
+                        {project.title}
+                      </h3>
+                      <p
+                        style={{
+                          color: "#6B7280",
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                          marginBottom: 14,
+                          flex: 1,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {project.description}
+                      </p>
+                      <span style={{ color: "#2563EB", fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, borderTop: "1px solid #F0F0F0", paddingTop: 12, marginTop: "auto" }}>
+                        Read More <ArrowRight size={12} />
+                      </span>
+                    </div>
+                  </motion.div>
                 </Link>
               ))}
             </div>

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import {
-  Download, FileText, BookOpen, Users,
+  Eye, FileText, BookOpen, Users,
   ShieldCheck, Globe, Search,
 } from "lucide-react";
 import { API_BASE_URL, getAssetUrl } from "../../services/config";
+import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
 // Helper components
 const Pill = ({ label }: { label: string }) => (
@@ -133,6 +134,7 @@ const BgSection = ({
 const Brochure = () => {
   const [brochures, setBrochures] = useState<any[]>([]);
   const [publications, setPublications] = useState<any[]>([]);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/brochures`)
@@ -311,11 +313,10 @@ const Brochure = () => {
               </p>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-                <a
-                  href={brochureUrl || "#"}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  disabled={!brochureUrl}
+                  onClick={() => brochureUrl && setPreviewDoc({ url: brochureUrl, title: "MIL Brochure" })}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -324,7 +325,7 @@ const Brochure = () => {
                     color: "#fff",
                     fontWeight: 600,
                     fontSize: 14,
-                    textDecoration: "none",
+                    border: "none",
                     padding: "12px 24px",
                     borderRadius: 999,
                     boxShadow: "0 10px 24px rgba(201,41,58,0.35)",
@@ -332,29 +333,8 @@ const Brochure = () => {
                     opacity: brochureUrl ? 1 : 0.6,
                   }}
                 >
-                  <Download size={16} /> Download Brochure
-                </a>
-                <a
-                  href={brochureUrl || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: 14,
-                    textDecoration: "none",
-                    padding: "12px 24px",
-                    borderRadius: 999,
-                    cursor: brochureUrl ? "pointer" : "not-allowed",
-                    opacity: brochureUrl ? 1 : 0.6,
-                  }}
-                >
-                  View Online
-                </a>
+                  <Eye size={16} /> View Brochure
+                </button>
               </div>
             </div>
           </div>
@@ -414,11 +394,10 @@ const Brochure = () => {
               leaders and institutions seeking to strengthen their ability to access, evaluate
               and use information responsibly.
             </p>
-            <a
-              href={brochureUrl || "#"}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              disabled={!brochureUrl}
+              onClick={() => brochureUrl && setPreviewDoc({ url: brochureUrl, title: "MIL Brochure" })}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -427,7 +406,6 @@ const Brochure = () => {
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: 14,
-                textDecoration: "none",
                 padding: "11px 24px",
                 borderRadius: 999,
                 border: "none",
@@ -436,8 +414,8 @@ const Brochure = () => {
                 boxShadow: "0 4px 16px rgba(201,41,58,0.3)"
               }}
             >
-              <Download size={15} /> Download Brochure
-            </a>
+              <Eye size={15} /> View Brochure
+            </button>
           </div>
 
           {/* Mockup card */}
@@ -622,42 +600,28 @@ const Brochure = () => {
                     display: "flex",
                     gap: 10,
                   }}>
-                    <a
-                      href={doc.file || "#"}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      disabled={!doc.file}
+                      onClick={() => doc.file && setPreviewDoc({ url: doc.file, title: doc.title })}
                       style={{
                         flex: 1,
-                        textAlign: "center",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
                         padding: "12px",
                         background: "#E8610A",
                         color: "#fff",
-                        textDecoration: "none",
+                        border: "none",
                         borderRadius: 10,
                         fontWeight: 700,
+                        cursor: doc.file ? "pointer" : "not-allowed",
                         opacity: doc.file ? 1 : 0.5,
                       }}
                     >
-                      View
-                    </a>
-
-                    <a
-                      href={doc.file || "#"}
-                      download
-                      style={{
-                        flex: 1,
-                        textAlign: "center",
-                        padding: "12px",
-                        background: "#C9293A",
-                        color: "#fff",
-                        textDecoration: "none",
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        opacity: doc.file ? 1 : 0.5,
-                      }}
-                    >
-                      Download
-                    </a>
+                      <Eye size={15} /> View
+                    </button>
                   </div>
                 </div>
               </div>
@@ -684,19 +648,23 @@ const Brochure = () => {
               boxShadow: "0 8px 30px rgba(0,0,0,.06)"
             }}>
               {featuredItems.map((doc, i) => (
-                <a
+                <button
                   key={i}
-                  href={doc.file || "#"}
-                  target="_blank"
-                  rel="noreferrer"
+                  type="button"
+                  disabled={!doc.file}
+                  onClick={() => doc.file && setPreviewDoc({ url: doc.file, title: doc.title })}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 16,
                     padding: "16px 22px",
                     borderBottom: i < featuredItems.length - 1 ? "1px solid #F1E9E4" : "none",
-                    textDecoration: "none",
+                    width: "100%",
+                    textAlign: "left",
+                    background: "none",
                     color: "inherit",
+                    cursor: doc.file ? "pointer" : "not-allowed",
+                    opacity: doc.file ? 1 : 0.5,
                   }}
                 >
                   <div style={{
@@ -722,8 +690,8 @@ const Brochure = () => {
                     }}>{doc.title}</p>
                     <span style={{ fontSize: 12, color: "#9A6B58" }}>{doc.kind}</span>
                   </div>
-                  <span style={{ color: "#C9293A", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>Download →</span>
-                </a>
+                  <span style={{ color: "#C9293A", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>View →</span>
+                </button>
               ))}
             </div>
           </div>
@@ -1061,23 +1029,23 @@ const Brochure = () => {
           gap: 20,
           flexWrap: "wrap",
         }}>
-          <a
-            href={brochureUrl || "#"}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            disabled={!brochureUrl}
+            onClick={() => brochureUrl && setPreviewDoc({ url: brochureUrl, title: "MIL Brochure" })}
             style={{
               background: "#C9293A",
               padding: "16px 34px",
               borderRadius: 12,
-              textDecoration: "none",
+              border: "none",
               fontWeight: 700,
               color: "#fff",
+              cursor: brochureUrl ? "pointer" : "not-allowed",
               opacity: brochureUrl ? 1 : 0.6,
             }}
           >
-            Download Brochure
-          </a>
+            View Brochure
+          </button>
 
           <a
             href="/mil/about"
@@ -1108,6 +1076,14 @@ const Brochure = () => {
           }
         }
       `}</style>
+
+      {previewDoc && (
+        <DocumentPreviewModal
+          fileUrl={previewDoc.url}
+          title={previewDoc.title}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
     </div>
   );
 };

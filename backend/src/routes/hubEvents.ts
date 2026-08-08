@@ -34,6 +34,7 @@ router.post("/", async (req, res) => {
     const {
       title,
       description,
+      eventType,
       eventDate,
       hubId,
     } = req.body;
@@ -42,6 +43,7 @@ router.post("/", async (req, res) => {
       data: {
         title,
         description,
+        eventType,
         eventDate: new Date(eventDate),
         hubId,
       },
@@ -64,6 +66,7 @@ router.put("/:id", async (req, res) => {
     const {
       title,
       description,
+      eventType,
       eventDate,
       hubId,
     } = req.body;
@@ -75,6 +78,7 @@ router.put("/:id", async (req, res) => {
       data: {
         title,
         description,
+        eventType,
         eventDate: new Date(eventDate),
         hubId,
       },

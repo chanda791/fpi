@@ -21,6 +21,8 @@ const EditNewsletter = () => {
     title: "",
     description: "",
     fileUrl: "",
+    image: "",
+    publishDate: "",
     published: true,
     category: "Newsletter",
   });
@@ -42,9 +44,11 @@ const EditNewsletter = () => {
 
         setForm({
           title: data.title || "",
-          description: "",
+          description: data.description || "",
           fileUrl: data.fileUrl || "",
-          published: true,
+          image: data.image || "",
+          publishDate: data.publishDate ? data.publishDate.slice(0, 10) : "",
+          published: data.published ?? true,
           category: "Newsletter",
         });
 
@@ -74,7 +78,11 @@ const EditNewsletter = () => {
 
       await newsletterService.update(Number(id), {
         title: form.title,
+        description: form.description,
         fileUrl: form.fileUrl,
+        image: form.image,
+        publishDate: form.publishDate || undefined,
+        published: form.published,
       });
 
       alert("Newsletter updated successfully.");
@@ -122,6 +130,8 @@ const EditNewsletter = () => {
           update={update}
           loading={saving}
           onSubmit={submit}
+          showImage
+          showDate
         />
 
       </PageCard>

@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { X } from "lucide-react";
+import { X, FileText, Images } from "lucide-react";
 import { getAssetUrl } from "../../services/config";
+import DocumentPreviewModal from "../DocumentPreviewModal";
+import Lightbox from "../Lightbox";
 
 interface ProgramSection {
   heading?: string;
   body?: string;
   image?: string;
+  images?: string[];
+  fileUrl?: string;
+  fileName?: string;
 }
 
 interface ProgramSectionsProps {
@@ -54,7 +59,10 @@ const ProgramSectionCard = ({
   onReadMore: () => void;
 }) => {
   const { ref, style } = useFadeUp((index % 3) * 100);
+  const galleryCount = section.images?.length || 0;
   const isLong = (section.body?.length || 0) > BODY_PREVIEW_THRESHOLD;
+  const hasMore = isLong || galleryCount > 0;
+  const [previewing, setPreviewing] = useState(false);
 
   return (
     <div
@@ -72,6 +80,11 @@ const ProgramSectionCard = ({
           <span className="absolute top-3 left-3 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white text-xs font-semibold px-3 py-1 rounded-full">
             {String(index + 1).padStart(2, "0")}
           </span>
+          {galleryCount > 0 && (
+            <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+              <Images size={12} /> {galleryCount}
+            </span>
+          )}
         </div>
       )}
 
@@ -89,16 +102,34 @@ const ProgramSectionCard = ({
             {section.body}
           </p>
         )}
-        {isLong && (
+        {hasMore && (
           <button
             type="button"
             onClick={onReadMore}
             className="inline-flex items-center gap-1 text-[#C9293A] font-semibold text-sm mt-4 hover:gap-2 transition-all self-start"
           >
-            Read More
+            {isLong ? "Read More" : "View Gallery"}
+          </button>
+        )}
+        {section.fileUrl && (
+          <button
+            type="button"
+            onClick={() => setPreviewing(true)}
+            className="inline-flex items-center gap-2 text-[#C9293A] font-semibold text-sm mt-4 hover:gap-3 transition-all self-start"
+          >
+            <FileText size={16} />
+            View Document
           </button>
         )}
       </div>
+
+      {previewing && section.fileUrl && (
+        <DocumentPreviewModal
+          fileUrl={section.fileUrl}
+          title={section.fileName || section.heading}
+          onClose={() => setPreviewing(false)}
+        />
+      )}
     </div>
   );
 };
@@ -110,6 +141,10 @@ const ProgramSectionModal = ({
   section: ProgramSection;
   onClose: () => void;
 }) => {
+  const [previewing, setPreviewing] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const galleryUrls = (section.images || []).map((url) => getAssetUrl(url));
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -155,8 +190,55 @@ const ProgramSectionModal = ({
           {section.body && (
             <p className="text-gray-600 leading-relaxed whitespace-pre-line">{section.body}</p>
           )}
+
+          {galleryUrls.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-6">
+              {galleryUrls.map((url, i) => (
+                <button
+                  key={`${url}-${i}`}
+                  type="button"
+                  onClick={() => setLightboxIndex(i)}
+                  className="relative rounded-xl overflow-hidden aspect-square group"
+                >
+                  <img
+                    src={url}
+                    alt={`${section.heading || "Gallery"} ${i + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {section.fileUrl && (
+            <button
+              type="button"
+              onClick={() => setPreviewing(true)}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-5 py-2.5 rounded-full text-sm font-semibold mt-6 hover:-translate-y-0.5 transition"
+            >
+              <FileText size={16} />
+              View Document
+            </button>
+          )}
         </div>
       </div>
+
+      {previewing && section.fileUrl && (
+        <DocumentPreviewModal
+          fileUrl={section.fileUrl}
+          title={section.fileName || section.heading}
+          onClose={() => setPreviewing(false)}
+        />
+      )}
+
+      {galleryUrls.length > 0 && (
+        <Lightbox
+          images={galleryUrls}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(-1)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
     </div>
   );
 };

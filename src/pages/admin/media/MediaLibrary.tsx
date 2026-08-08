@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 
 import AdminLayout from "../../../components/admin/AdminLayout";
-import { API_BASE_URL, getAssetUrl } from "../../../services/config";
+import DocumentPreviewModal from "../../../components/DocumentPreviewModal";
+import { API_BASE_URL, getAssetUrl, getDownloadUrl } from "../../../services/config";
 import PageHeader from "../../../components/admin/PageHeader";
 import PageCard from "../../../components/admin/PageCard";
 import Loading from "../../../components/admin/Loading";
@@ -36,6 +37,7 @@ const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/media`)
@@ -155,18 +157,18 @@ const MediaLibrary = () => {
 
                   {/* ACTIONS */}
                   <div className="flex justify-between mt-5">
-                    <a
-                      href={getAssetUrl(file.url)}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setPreviewFile(file)}
                       className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition"
                     >
                       <Eye size={18} />
-                    </a>
+                    </button>
 
                     <a
-                      href={getAssetUrl(file.url)}
-                      download
+                      href={getDownloadUrl(file.url, file.originalName)}
+                      target="_blank"
+                      rel="noreferrer"
                       className="w-10 h-10 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 flex items-center justify-center transition"
                     >
                       <Download size={18} />
@@ -192,6 +194,14 @@ const MediaLibrary = () => {
           </div>
         )}
       </PageCard>
+
+      {previewFile && (
+        <DocumentPreviewModal
+          fileUrl={previewFile.url}
+          title={previewFile.originalName}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </AdminLayout>
   );
 };

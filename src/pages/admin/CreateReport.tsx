@@ -18,6 +18,7 @@ const CreateReport = () => {
     description: "",
     category: "Report",
     fileUrl: "",
+    image: "",
     published: true,
   });
 
@@ -36,6 +37,7 @@ const CreateReport = () => {
         title: form.title,
         description: form.description,
         fileUrl: form.fileUrl,
+        image: form.image,
         published: form.published,
       });
 
@@ -64,6 +66,7 @@ const CreateReport = () => {
           update={update}
           loading={loading}
           onSubmit={submit}
+          showImage
         />
       </PageCard>
     </AdminLayout>

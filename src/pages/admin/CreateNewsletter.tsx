@@ -17,6 +17,8 @@ const CreateNewsletter = () => {
     title: "",
     description: "",
     fileUrl: "",
+    image: "",
+    publishDate: "",
     published: true,
     category: "Newsletter",
   });
@@ -34,7 +36,11 @@ const CreateNewsletter = () => {
 
       await newsletterService.create({
         title: form.title,
+        description: form.description,
         fileUrl: form.fileUrl,
+        image: form.image,
+        publishDate: form.publishDate || undefined,
+        published: form.published,
       });
 
       alert("Newsletter created successfully.");
@@ -70,6 +76,8 @@ const CreateNewsletter = () => {
           update={update}
           loading={loading}
           onSubmit={submit}
+          showImage
+          showDate
         />
 
       </PageCard>

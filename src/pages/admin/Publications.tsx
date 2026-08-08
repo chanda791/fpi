@@ -13,13 +13,14 @@ import PageCard from "../../components/admin/PageCard";
 import PrimaryButton from "../../components/admin/PrimaryButton";
 import Loading from "../../components/admin/Loading";
 import EmptyState from "../../components/admin/EmptyState";
-import { getAssetUrl } from "../../services/config";
+import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
 import { publicationService } from "../../services/publicationService";
 
 const Publications = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewItem, setPreviewItem] = useState<any | null>(null);
 
   const load = async () => {
     try {
@@ -124,13 +125,12 @@ const Publications = () => {
 
                     <div className="flex justify-center gap-3">
 
-                      <a
-                        href={getAssetUrl(item.fileUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => setPreviewItem(item)}
                       >
                         <Eye size={18} />
-                      </a>
+                      </button>
 
                       <Link
                         to={`/admin/publications/${item.id}/edit`}
@@ -162,6 +162,14 @@ const Publications = () => {
         )}
 
       </PageCard>
+
+      {previewItem && (
+        <DocumentPreviewModal
+          fileUrl={previewItem.fileUrl}
+          title={previewItem.title}
+          onClose={() => setPreviewItem(null)}
+        />
+      )}
 
     </AdminLayout>
   );

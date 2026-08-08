@@ -10,6 +10,7 @@ import {
   Mail,
 } from "lucide-react";
 import { API_BASE_URL, getAssetUrl } from "../../services/config";
+import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
 // ============================================================
 // DATA CONFIGURATION – all content can be replaced from admin
@@ -196,6 +197,7 @@ const AnimatedSection = ({
 const Resources = () => {
   const [liveResources, setLiveResources] = useState<any[]>([]);
   const [latestReport, setLatestReport] = useState<any>(null);
+  const [previewItem, setPreviewItem] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/resources`)
@@ -385,14 +387,16 @@ const Resources = () => {
                   type: r.category || "Resource",
                   date: new Date(r.createdAt).toLocaleDateString("en-GB", { year: "numeric", month: "long" }),
                   image: r.thumbnail ? getAssetUrl(r.thumbnail) : "/images/activity-1.jpg",
-                  href: r.link || r.fileUrl || "#",
+                  fileUrl: r.fileUrl || "",
+                  link: r.link || "",
                 }))
               : resourcesData.latest.items.map((item) => ({
                   title: item.title,
                   type: item.type,
                   date: item.date,
                   image: item.image,
-                  href: "/documents/resource.pdf",
+                  fileUrl: "",
+                  link: "/documents/resource.pdf",
                 }))
             ).map((item, idx) => (
               <AnimatedSection key={idx} delay={idx * 100}>
@@ -407,19 +411,37 @@ const Resources = () => {
                     </span>
                     <h3 className="font-serif text-xl font-bold mt-2 mb-2">{item.title}</h3>
                     <p className="text-gray-500 text-sm mb-4">{item.date}</p>
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[#C9293A] font-medium text-sm hover:gap-2 transition"
-                    >
-                      Open <ArrowRight size={12} />
-                    </a>
+                    {item.fileUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewItem({ url: item.fileUrl, title: item.title })}
+                        className="inline-flex items-center gap-1 text-[#C9293A] font-medium text-sm hover:gap-2 transition"
+                      >
+                        Open <ArrowRight size={12} />
+                      </button>
+                    ) : (
+                      <a
+                        href={item.link || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[#C9293A] font-medium text-sm hover:gap-2 transition"
+                      >
+                        Open <ArrowRight size={12} />
+                      </a>
+                    )}
                   </div>
                 </div>
               </AnimatedSection>
             ))}
           </div>
+
+          {previewItem && (
+            <DocumentPreviewModal
+              fileUrl={previewItem.url}
+              title={previewItem.title}
+              onClose={() => setPreviewItem(null)}
+            />
+          )}
         </div>
       </section>
 

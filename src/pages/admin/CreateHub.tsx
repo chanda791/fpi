@@ -29,6 +29,7 @@ const CreateHub = () => {
     slug: "",
     location: "",
     coordinator: "",
+    coordinatorImage: "",
     participants: 0,
     description: "",
     image: "",
@@ -136,6 +137,12 @@ const CreateHub = () => {
                 e.target.value
               )
             }
+          />
+
+          <ImageUpload
+            label="Coordinator Photo (optional)"
+            value={formData.coordinatorImage}
+            onChange={(url) => update("coordinatorImage", url)}
           />
 
           <Input

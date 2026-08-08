@@ -30,6 +30,7 @@ const EditHub = () => {
     name: "",
     location: "",
     coordinator: "",
+    coordinatorImage: "",
     description: "",
     participants: 0,
     image: "",
@@ -53,6 +54,7 @@ const EditHub = () => {
           name: hub.name || "",
           location: hub.location || "",
           coordinator: hub.coordinator || "",
+          coordinatorImage: hub.coordinatorImage || "",
           description: hub.description || "",
           participants: hub.participants || 0,
           image: hub.image || "",
@@ -183,6 +185,12 @@ const EditHub = () => {
                 e.target.value
               )
             }
+          />
+
+          <ImageUpload
+            label="Coordinator Photo (optional)"
+            value={formData.coordinatorImage}
+            onChange={(url) => update("coordinatorImage", url)}
           />
 
           <Input

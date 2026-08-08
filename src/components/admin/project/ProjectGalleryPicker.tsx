@@ -6,11 +6,15 @@ import { getAssetUrl } from "../../../services/config";
 interface ProjectGalleryPickerProps {
   value: string[];
   onChange: (urls: string[]) => void;
+  label?: string;
+  helpText?: string;
 }
 
 const ProjectGalleryPicker = ({
   value,
   onChange,
+  label = "Gallery Images",
+  helpText = "Add as many additional photos as you like. These appear in the \"Project Gallery\" section on the public project page.",
 }: ProjectGalleryPickerProps) => {
   const [adding, setAdding] = useState(false);
 
@@ -28,11 +32,10 @@ const ProjectGalleryPicker = ({
   return (
     <div className="space-y-3">
       <label className="block text-sm font-semibold text-slate-700">
-        Gallery Images
+        {label}
       </label>
       <p className="text-sm text-slate-500">
-        Add as many additional photos as you like. These appear in the
-        "Project Gallery" section on the public project page.
+        {helpText}
       </p>
 
       {value.length > 0 && (

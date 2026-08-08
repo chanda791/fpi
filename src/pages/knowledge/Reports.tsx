@@ -6,13 +6,15 @@ import {
   BookOpen,
   ArrowRight,
 } from "lucide-react";
-import { API_BASE_URL } from "../../services/config";
+import { API_BASE_URL, getAssetUrl } from "../../services/config";
+import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
 interface Report {
   id: number;
   title: string;
   description?: string;
   fileUrl: string;
+  image?: string;
   published: boolean;
   createdAt: string;
 }
@@ -156,6 +158,7 @@ const GradText = ({ children }: { children: React.ReactNode }) => (
 const Reports = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewReport, setPreviewReport] = useState<Report | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/reports`)
@@ -265,33 +268,42 @@ const Reports = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {reports.map((report, idx) => (
                 <AnimatedSection key={report.id} delay={idx * 100}>
-                  <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full border border-gray-100 flex flex-col">
-                    <FileText className="w-12 h-12 text-[#C9293A] mb-4" />
-                    <span className="text-[#C9293A] text-xs font-semibold uppercase tracking-wide">
-                      Report
-                    </span>
-                    <h3 className="font-serif text-xl font-bold mt-2 mb-3">
-                      {report.title}
-                    </h3>
-                    <div className="flex items-center text-gray-500 text-sm mb-3">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {new Date(report.createdAt).toLocaleDateString("en-GB", {
-                        year: "numeric",
-                        month: "long",
-                      })}
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full border border-gray-100 flex flex-col">
+                    {report.image ? (
+                      <div className="h-44 bg-gray-100 overflow-hidden">
+                        <img src={getAssetUrl(report.image)} alt={report.title} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-44 bg-gradient-to-br from-[#C9293A]/10 to-[#E8610A]/10 flex items-center justify-center">
+                        <FileText className="w-12 h-12 text-[#C9293A]" />
+                      </div>
+                    )}
+                    <div className="p-6 md:p-8 flex flex-col flex-grow">
+                      <span className="text-[#C9293A] text-xs font-semibold uppercase tracking-wide">
+                        Report
+                      </span>
+                      <h3 className="font-serif text-xl font-bold mt-2 mb-3">
+                        {report.title}
+                      </h3>
+                      <div className="flex items-center text-gray-500 text-sm mb-3">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {new Date(report.createdAt).toLocaleDateString("en-GB", {
+                          year: "numeric",
+                          month: "long",
+                        })}
+                      </div>
+                      <p className="text-gray-600 text-sm mb-5 flex-grow">
+                        {report.description}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewReport(report)}
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:-translate-y-1 transition w-fit shadow-md"
+                      >
+                        <Download size={16} />
+                        Review &amp; Download
+                      </button>
                     </div>
-                    <p className="text-gray-600 text-sm mb-5 flex-grow">
-                      {report.description}
-                    </p>
-                    <a
-                      href={report.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:-translate-y-1 transition w-fit shadow-md"
-                    >
-                      <Download size={16} />
-                      Download
-                    </a>
                   </div>
                 </AnimatedSection>
               ))}
@@ -320,6 +332,14 @@ const Reports = () => {
           </AnimatedSection>
         </div>
       </section>
+
+      {previewReport && (
+        <DocumentPreviewModal
+          fileUrl={previewReport.fileUrl}
+          title={previewReport.title}
+          onClose={() => setPreviewReport(null)}
+        />
+      )}
     </div>
   );
 };

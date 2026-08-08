@@ -4,6 +4,9 @@ export interface ProgramSection {
   heading?: string;
   body?: string;
   image?: string;
+  images?: string[];
+  fileUrl?: string;
+  fileName?: string;
 }
 
 export interface ProgramContent {

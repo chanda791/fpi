@@ -15,6 +15,7 @@ interface Props {
   loading?: boolean;
   onSubmit: () => void;
   showImage?: boolean;
+  showDate?: boolean;
 }
 
 const DocumentForm = ({
@@ -23,6 +24,7 @@ const DocumentForm = ({
   loading = false,
   onSubmit,
   showImage = false,
+  showDate = false,
 }: Props) => {
   const [fileUploading, setFileUploading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -69,6 +71,17 @@ const DocumentForm = ({
           value={form.image}
           onChange={(url) => update("image", url)}
           onUploadingChange={setImageUploading}
+        />
+      )}
+
+      {showDate && (
+        <Input
+          label="Publish Date"
+          name="publishDate"
+          type="date"
+          value={form.publishDate || ""}
+          onChange={(e) => update("publishDate", e.target.value)}
+          helperText="Leave blank to use today. Set this to backdate an issue that's being entered late."
         />
       )}
 

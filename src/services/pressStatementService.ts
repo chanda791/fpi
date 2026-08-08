@@ -5,6 +5,7 @@ export interface PressStatement {
   title: string;
   description?: string;
   fileUrl: string;
+  image?: string;
   published: boolean;
   createdAt: string;
   updatedAt: string;

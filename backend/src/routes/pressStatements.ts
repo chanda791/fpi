@@ -56,13 +56,14 @@ router.get("/:id", async (req, res) => {
  */
 router.post("/", async (req, res) => {
   try {
-    const { title, description, fileUrl, published } = req.body;
+    const { title, description, fileUrl, image, published } = req.body;
 
     const statement = await prisma.pressStatement.create({
       data: {
         title,
         description,
         fileUrl,
+        image,
         published,
       },
     });

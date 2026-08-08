@@ -54,13 +54,14 @@ router.get("/:id", async (req, res) => {
  */
 router.post("/", async (req, res) => {
   try {
-    const { title, description, fileUrl, published } = req.body;
+    const { title, description, fileUrl, image, published } = req.body;
 
     const report = await prisma.report.create({
       data: {
         title,
         description,
         fileUrl,
+        image,
         published,
       },
     });

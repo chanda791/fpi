@@ -3,7 +3,11 @@ import { BaseService } from "./BaseService";
 export interface Newsletter {
   id: number;
   title: string;
- fileUrl: string;
+  description?: string;
+  fileUrl: string;
+  image?: string;
+  publishDate?: string;
+  published: boolean;
   createdAt: string;
 }
 

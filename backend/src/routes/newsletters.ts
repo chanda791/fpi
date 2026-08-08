@@ -56,12 +56,16 @@ router.get("/:id", async (req, res) => {
  */
 router.post("/", async (req, res) => {
   try {
-    const { title, fileUrl } = req.body;
+    const { title, description, fileUrl, image, publishDate, published } = req.body;
 
     const newsletter = await prisma.newsletter.create({
       data: {
         title,
+        description,
         fileUrl,
+        image,
+        publishDate: publishDate ? new Date(publishDate) : null,
+        published,
       },
     });
 
@@ -80,11 +84,20 @@ router.post("/", async (req, res) => {
  */
 router.put("/:id", async (req, res) => {
   try {
+    const { title, description, fileUrl, image, publishDate, published } = req.body;
+
     const newsletter = await prisma.newsletter.update({
       where: {
         id: Number(req.params.id),
       },
-      data: req.body,
+      data: {
+        title,
+        description,
+        fileUrl,
+        image,
+        publishDate: publishDate ? new Date(publishDate) : null,
+        published,
+      },
     });
 
     res.json(newsletter);

@@ -39,6 +39,7 @@ model Report {
   title       String
   description String?
   fileUrl     String
+  image       String?
 
   published   Boolean  @default(true)
 
@@ -47,10 +48,23 @@ model Report {
 }
 
 model Newsletter {
-  id        Int      @id @default(autoincrement())
-  title     String
-  fileUrl   String
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  fileUrl     String
+  image       String?
+
+  // When the issue actually went out -- lets admins backdate a newsletter
+  // that's being entered into the system after the fact. Falls back to
+  // createdAt when not set.
+  publishDate DateTime?
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 model TeamMember {
@@ -114,6 +128,7 @@ model Hub {
 
   location      String?
   coordinator   String?
+  coordinatorImage String?
 
   participants  Int      @default(0)
 
@@ -150,6 +165,10 @@ model HubEvent {
 
   title       String
   description String?
+
+  // "Training" or "Community" -- drives the real "Training Sessions" /
+  // "Community Events" counts shown on the public MIL Hubs impact stats.
+  eventType   String   @default("Community")
 
   eventDate   DateTime
 
@@ -211,6 +230,7 @@ model PressStatement {
   description String?
 
   fileUrl     String
+  image       String?
 
   published   Boolean  @default(true)
 

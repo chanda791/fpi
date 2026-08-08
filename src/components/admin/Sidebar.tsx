@@ -9,6 +9,8 @@ import {
   Users,
   MapPinned,
   Map,
+  CalendarClock,
+  Images,
   Image,
   Settings,
   BookOpen,
@@ -152,6 +154,16 @@ const Sidebar = () => {
         <Link to="/admin/hubs" className={itemClass("/admin/hubs")}>
           <MapPinned size={20} />
           MIL Hubs
+        </Link>
+
+        <Link to="/admin/hub-events" className={itemClass("/admin/hub-events")}>
+          <CalendarClock size={20} />
+          Hub Events
+        </Link>
+
+        <Link to="/admin/hub-photos" className={itemClass("/admin/hub-photos")}>
+          <Images size={20} />
+          Hub Photos
         </Link>
 
         <Link to="/admin/provinces" className={itemClass("/admin/provinces")}>

@@ -7,6 +7,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { API_BASE_URL } from "../../services/config";
+import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
 interface Publication {
   id: number;
@@ -176,6 +177,7 @@ const Publications = () => {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Publication | null>(null);
+  const [previewItem, setPreviewItem] = useState<Publication | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/publications`)
@@ -325,14 +327,13 @@ const Publications = () => {
                         >
                           View Details <ArrowRight size={12} />
                         </button>
-                        <a
-                          href={item.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => setPreviewItem(item)}
                           className="inline-flex items-center gap-1 text-gray-500 font-medium text-sm hover:text-[#C9293A] transition"
                         >
                           Preview
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -373,16 +374,23 @@ const Publications = () => {
             <p className="text-gray-600 leading-relaxed mb-6 whitespace-pre-line">
               {selected.description}
             </p>
-            <a
-              href={selected.fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setPreviewItem(selected)}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:-translate-y-0.5 transition"
             >
               Preview Document <ArrowRight size={15} />
-            </a>
+            </button>
           </div>
         </div>
+      )}
+
+      {previewItem && (
+        <DocumentPreviewModal
+          fileUrl={previewItem.fileUrl}
+          title={previewItem.title}
+          onClose={() => setPreviewItem(null)}
+        />
       )}
 
       {/* ========== CTA ========== */}

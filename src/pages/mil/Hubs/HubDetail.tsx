@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { Calendar, Image, BookOpen, HandHeart, Clock, Award, MapPin, Users, UserCheck } from "lucide-react";
-import { API_BASE_URL } from "../../../services/config";
+import { API_BASE_URL, getAssetUrl } from "../../../services/config";
 import BackButton from "../../../components/BackButton";
+
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 
 /* Lightweight scroll-reveal wrapper — fades/slides a section in once it enters the viewport. */
 const Reveal = ({ children, className = "" }: { children: ReactNode; className?: string }) => {
@@ -183,10 +189,22 @@ const HubDetail = () => {
           <Reveal>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-6">
               <h2 className="hub-font-display text-xl font-semibold mb-3 text-gray-900">Hub Coordinator</h2>
-              <p className="text-gray-600 flex items-center gap-2">
-                <UserCheck size={16} className="text-[#C9293A]" />
-                {hub.coordinator || "Not Assigned"}
-              </p>
+              <div className="flex items-center gap-4">
+                {hub.coordinatorImage ? (
+                  <img
+                    src={getAssetUrl(hub.coordinatorImage)}
+                    alt={hub.coordinator || "Hub Coordinator"}
+                    className="w-14 h-14 rounded-full object-cover border border-gray-100 shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-[#C9293A]/10 flex items-center justify-center shrink-0">
+                    <UserCheck size={20} className="text-[#C9293A]" />
+                  </div>
+                )}
+                <p className="text-gray-600">
+                  {hub.coordinator || "Not Assigned"}
+                </p>
+              </div>
             </div>
           </Reveal>
 
@@ -241,9 +259,10 @@ const HubDetail = () => {
                       className="border-l-4 border-[#C9293A] pl-4 py-2 hover:bg-gray-50 transition rounded-r-lg"
                     >
                       <h4 className="font-bold text-lg">{event.title}</h4>
-                      {event.date && (
+                      {event.eventDate && (
                         <p className="text-sm text-gray-500 flex items-center gap-1">
-                          <Clock size={14} /> {new Date(event.date).toLocaleDateString()}
+                          <Clock size={14} /> {new Date(event.eventDate).toLocaleDateString()}
+                          {event.eventType && ` · ${event.eventType}`}
                         </p>
                       )}
                       {event.description && (
@@ -256,24 +275,38 @@ const HubDetail = () => {
             </Reveal>
           )}
 
-          {/* ══ Photo Gallery — unchanged condition, restyled ══ */}
+          {/* ══ Photo Gallery — slideshow ══ */}
           {hub.photos && hub.photos.length > 0 && (
             <Reveal>
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
                 <h2 className="hub-font-display text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-3 text-gray-900">
                   <Image className="text-[#C9293A]" /> Photo Gallery
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <Swiper
+                  modules={[Autoplay, Pagination, Navigation]}
+                  spaceBetween={16}
+                  slidesPerView={1}
+                  navigation
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 4000, disableOnInteraction: false }}
+                  breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }}
+                  style={{ paddingBottom: 44 }}
+                >
                   {hub.photos.map((photo: any) => (
-                    <div key={photo.id} className="overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-                      <img
-                        src={photo.url}
-                        alt={hub.name}
-                        className="w-full h-48 object-cover hover:scale-105 transition duration-500"
-                      />
-                    </div>
+                    <SwiperSlide key={photo.id}>
+                      <div className="overflow-hidden rounded-xl shadow-sm">
+                        <img
+                          src={getAssetUrl(photo.imageUrl)}
+                          alt={photo.caption || hub.name}
+                          className="w-full h-56 object-cover"
+                        />
+                        {photo.caption && (
+                          <p className="text-sm text-gray-500 mt-2">{photo.caption}</p>
+                        )}
+                      </div>
+                    </SwiperSlide>
                   ))}
-                </div>
+                </Swiper>
               </div>
             </Reveal>
           )}

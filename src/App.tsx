@@ -39,6 +39,8 @@ import CreateProject from "./pages/admin/CreateProject";
 import ProjectDetail from "./pages/Projects/ProjectDetail";
 import HubDetail from "./pages/mil/Hubs/HubDetail";
 import AdminHubs from "./pages/admin/Hubs";
+import HubEvents from "./pages/admin/HubEvents";
+import HubPhotos from "./pages/admin/HubPhotos";
 import Provinces from "./pages/admin/Provinces";
 import CreateHub from "./pages/admin/CreateHub";
 import ProvinceHubs from "./pages/mil/Hubs/ProvinceHubs";
@@ -201,6 +203,8 @@ function AppContent() {
   {/* ---------- HUBS ---------- */}
 
   <Route path="/admin/hubs" element={admin(<AdminHubs />)} />
+  <Route path="/admin/hub-events" element={admin(<HubEvents />)} />
+  <Route path="/admin/hub-photos" element={admin(<HubPhotos />)} />
   <Route path="/admin/hubs/create" element={admin(<CreateHub />)} />
   <Route path="/admin/hubs/:id/edit" element={admin(<EditHub />)} />
 

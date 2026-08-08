@@ -19,6 +19,55 @@ export function getAssetUrl(url?: string | null) {
   return url;
 }
 
+/**
+ * Cloudinary's "raw" delivery (used for PDFs/docs) always sends
+ * Content-Disposition: attachment and ignores on-the-fly transformations
+ * like `fl_attachment` (appending it 404s), so we can't control the
+ * filename or force an inline render by editing the Cloudinary URL. The
+ * backend's /media/proxy route streams the file through our own server
+ * instead, with headers we set ourselves.
+ */
+function buildProxyUrl(resolved: string, mode: "attachment" | "inline", filename?: string) {
+  if (!resolved.includes("res.cloudinary.com/")) {
+    return resolved;
+  }
+
+  const params = new URLSearchParams({ url: resolved, mode });
+  if (filename) {
+    params.set("filename", filename);
+  }
+
+  return `${API_BASE_URL}/media/proxy?${params.toString()}`;
+}
+
+/**
+ * Forces a real, completed browser download with a proper filename,
+ * instead of relying on the HTML `download` attribute -- which Chrome
+ * does not honor reliably for cross-origin URLs and leaves behind an
+ * "Unconfirmed ####.crdownload" file.
+ */
+export function getDownloadUrl(url?: string | null, filename?: string) {
+  const resolved = getAssetUrl(url);
+  if (!resolved) {
+    return "";
+  }
+
+  return buildProxyUrl(resolved, "attachment", filename);
+}
+
+/**
+ * Same file, but asks the browser to render it in place (e.g. inside an
+ * <iframe> preview) instead of downloading it.
+ */
+export function getPreviewUrl(url?: string | null) {
+  const resolved = getAssetUrl(url);
+  if (!resolved) {
+    return "";
+  }
+
+  return buildProxyUrl(resolved, "inline");
+}
+
 export function installApiFetchInterceptor() {
   const originalFetch = window.fetch.bind(window);
 
