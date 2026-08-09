@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { X, Download, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Download, ExternalLink, FileText } from "lucide-react";
 import { getAssetUrl, getDownloadUrl, getPreviewUrl } from "../services/config";
 
 interface DocumentPreviewModalProps {
@@ -22,6 +22,22 @@ const DocumentPreviewModal = ({ fileUrl, title, onClose }: DocumentPreviewModalP
   // explicitly ask for an inline response via our own proxy -- images
   // are inline by default and don't need it.
   const previewUrl = isImage ? resolvedUrl : getPreviewUrl(fileUrl);
+
+  // Mobile browsers (iOS Safari especially) don't support the native
+  // paginated PDF viewer inside an <iframe> -- it just renders a static
+  // first page with no scroll/pagination, which reads as "only one page
+  // exists". The same URL opened as the browser's own top-level document
+  // works fine, so on small screens we skip the iframe and point people at
+  // "Open Document" instead of showing a broken-looking preview.
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -88,6 +104,21 @@ const DocumentPreviewModal = ({ fileUrl, title, onClose }: DocumentPreviewModalP
               alt={title || "Preview"}
               className="w-full h-full object-contain"
             />
+          ) : isMobile ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-8 text-center">
+              <FileText size={48} className="text-slate-400" />
+              <p className="text-slate-600 max-w-xs">
+                Document preview isn't supported inline on mobile browsers. Open it to view the full document.
+              </p>
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#C9293A] text-white px-5 py-2.5 rounded-full text-sm font-semibold"
+              >
+                <ExternalLink size={16} /> Open Document
+              </a>
+            </div>
           ) : (
             <iframe
               src={previewUrl}

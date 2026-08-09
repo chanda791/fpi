@@ -8,15 +8,29 @@ export function getAssetUrl(url?: string | null) {
     return "";
   }
 
+  let resolved = url;
+
   if (url.startsWith("http://localhost:5000")) {
-    return url.replace("http://localhost:5000", API_ORIGIN);
+    resolved = url.replace("http://localhost:5000", API_ORIGIN);
+  } else if (url.startsWith("/")) {
+    resolved = `${API_ORIGIN}${url}`;
   }
 
-  if (url.startsWith("/")) {
-    return `${API_ORIGIN}${url}`;
+  // Auto-optimize Cloudinary images: f_auto picks the smallest format the
+  // requesting browser supports (WebP/AVIF instead of the original
+  // JPEG/PNG), q_auto applies perceptual-quality-aware compression. This is
+  // the single biggest lever for mobile load time -- it applies to every
+  // image on the site through this one function, no per-page changes
+  // needed. Only touches `image` resources, never raw PDFs/docs or audio.
+  if (
+    resolved.includes("res.cloudinary.com/") &&
+    resolved.includes("/image/upload/") &&
+    !resolved.includes("/image/upload/f_auto")
+  ) {
+    resolved = resolved.replace("/image/upload/", "/image/upload/f_auto,q_auto/");
   }
 
-  return url;
+  return resolved;
 }
 
 /**
