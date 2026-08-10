@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mail, Calendar, Download, FileText } from "lucide-react";
 import { API_BASE_URL, getAssetUrl } from "../../services/config";
 import DocumentPreviewModal from "../../components/DocumentPreviewModal";
+import { subscriberService } from "../../services/subscriberService";
 
 interface Newsletter {
   id: number;
@@ -32,48 +33,6 @@ const newslettersData = {
     description:
       "Get monthly updates on media freedom, journalism training, advocacy campaigns, research publications, and community impact.",
   },
-  newsletters: [
-    {
-      id: 1,
-      title: "FPI Zambia Newsletter – June 2025",
-      date: "June 2025",
-      description:
-        "Highlights from training programs, partnerships, advocacy activities, and the launch of the SheRise initiative.",
-      image: "/images/news.jpg",
-      pdfUrl: "/pdfs/newsletter-june-2025.pdf",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "FPI Zambia Newsletter – March 2025",
-      date: "March 2025",
-      description:
-        "Updates on media literacy campaigns, community engagement initiatives, and the Claim Your Space project.",
-      image: "/images/newsletter-2.jpg",
-      pdfUrl: "/pdfs/newsletter-march-2025.pdf",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "FPI Zambia Newsletter – January 2025",
-      date: "January 2025",
-      description:
-        "Program achievements, strategic priorities, upcoming events, and new research publications.",
-      image: "/images/newsletter-3.jpg",
-      pdfUrl: "/pdfs/newsletter-january-2025.pdf",
-      featured: false,
-    },
-    {
-      id: 4,
-      title: "FPI Zambia Newsletter – October 2024",
-      date: "October 2024",
-      description:
-        "Coverage of the national media freedom symposium, capacity building workshops, and policy dialogues.",
-      image: "/images/newsletter-4.jpg",
-      pdfUrl: "/pdfs/newsletter-october-2024.pdf",
-      featured: false,
-    },
-  ],
   subscribe: {
     tag: "Never Miss an Update",
     title: "Subscribe to Our Newsletter",
@@ -86,7 +45,6 @@ const newslettersData = {
     title: "Stay Informed, Stay Engaged",
     subtitle:
       "Join a community of journalists, researchers, and advocates working for a free and informed Zambia.",
-    button: { text: "Subscribe Today", link: "#subscribe" },
   },
 };
 
@@ -171,6 +129,28 @@ const Newsletters = () => {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewNewsletter, setPreviewNewsletter] = useState<Newsletter | null>(null);
+  const [subEmail, setSubEmail] = useState("");
+  const [subStatus, setSubStatus] = useState<string | null>(null);
+  const [subbing, setSubbing] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!subEmail.trim() || !subEmail.includes("@")) {
+      setSubStatus("Please enter a valid email address.");
+      return;
+    }
+    try {
+      setSubbing(true);
+      setSubStatus(null);
+      const res = await subscriberService.subscribe(subEmail.trim());
+      setSubStatus(res.message || "Subscribed. Thank you!");
+      setSubEmail("");
+    } catch (e) {
+      console.error(e);
+      setSubStatus("Something went wrong. Please try again.");
+    } finally {
+      setSubbing(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/newsletters`)
@@ -341,13 +321,24 @@ const Newsletters = () => {
               <input
                 type="email"
                 placeholder={newslettersData.subscribe.placeholder}
+                value={subEmail}
+                onChange={(e) => setSubEmail(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSubscribe(); }}
                 className="flex-1 border border-gray-300 rounded-full px-6 py-3 focus:outline-none focus:ring-2 focus:ring-[#C9293A] focus:border-transparent"
               />
-              <button className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-8 py-3 rounded-full font-semibold hover:-translate-y-1 transition-all duration-300 shadow-lg whitespace-nowrap">
+              <button
+                type="button"
+                onClick={handleSubscribe}
+                disabled={subbing}
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-8 py-3 rounded-full font-semibold hover:-translate-y-1 transition-all duration-300 shadow-lg whitespace-nowrap disabled:opacity-60"
+              >
                 <Mail size={18} />
-                {newslettersData.subscribe.buttonText}
+                {subbing ? "Subscribing..." : newslettersData.subscribe.buttonText}
               </button>
             </div>
+            {subStatus && (
+              <p className="text-[#C9293A] text-sm mt-4">{subStatus}</p>
+            )}
             <p className="text-gray-400 text-xs mt-4">
               We respect your privacy. Unsubscribe at any time.
             </p>
