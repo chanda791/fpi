@@ -20,6 +20,15 @@ const Navbar = () => {
   useEffect(() => {
     setIsOpen(false);
     setDropdown(null);
+    // Release the mobile-menu scroll lock immediately on navigation, in the
+    // same effect as the route change itself -- not a render cycle later
+    // via the isOpen-dependent effect below. Otherwise ScrollToTop's
+    // scrollTo(0,0) can fire while the body is still overflow:hidden (most
+    // mobile browsers just ignore a scroll call in that state), and nothing
+    // re-applies it once the lock actually releases -- the page is left
+    // wherever the browser's scroll/layout heuristics land, which is often
+    // near the bottom after scrolling through a long mobile menu.
+    document.body.style.overflow = "auto";
   }, [location]);
 
   useEffect(() => {

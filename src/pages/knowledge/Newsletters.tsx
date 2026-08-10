@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Mail, Calendar, ArrowRight, Download, FileText } from "lucide-react";
+import { Mail, Calendar, Download, FileText } from "lucide-react";
 import { API_BASE_URL, getAssetUrl } from "../../services/config";
 import DocumentPreviewModal from "../../components/DocumentPreviewModal";
 
@@ -365,13 +365,6 @@ const Newsletters = () => {
             <p className="text-gray-300 text-base md:text-lg mb-8 max-w-2xl mx-auto">
               {newslettersData.cta.subtitle}
             </p>
-            <a
-              href={newslettersData.cta.button.link}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9293A] to-[#E8610A] text-white px-8 py-3 rounded-full font-semibold hover:-translate-y-1 transition-all duration-300 shadow-lg"
-            >
-              {newslettersData.cta.button.text}
-              <ArrowRight size={18} />
-            </a>
           </AnimatedSection>
         </div>
       </section>
