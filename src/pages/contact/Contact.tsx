@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Send, Clock } from "lucide-react";
 import { API_BASE_URL } from "../../services/config";
+import WhatsAppButton from "../../components/WhatsAppButton";
 
 const FacebookIcon = (p: any) => (<svg viewBox="0 0 24 24" fill="currentColor" width={p.size || 19} height={p.size || 19}><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.49 0-1.96.93-1.96 1.89v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.1 24 18.1 24 12.07z"/></svg>);
 const TwitterIcon = (p: any) => (<svg viewBox="0 0 24 24" fill="currentColor" width={p.size || 19} height={p.size || 19}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>);
@@ -240,6 +241,8 @@ const Contact = () => {
           </div>
         </div>
       </section>
+
+      <WhatsAppButton phone={settings.phone} />
 
       {/* Hero styles */}
       <style>{`

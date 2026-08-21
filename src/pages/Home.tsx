@@ -28,6 +28,10 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 
+// FPI Zambia was founded in July 2018 (see Advocacy program page).
+const FOUNDING_YEAR = 2018;
+const YEARS_OF_IMPACT = new Date().getFullYear() - FOUNDING_YEAR;
+
 const knowledgeIcons: Record<string, any> = {
   Report: FileText,
   Newsletter: Mail,
@@ -702,7 +706,7 @@ const Home = () => {
             <motion.div variants={cardVariants} style={{ position: "relative" }}>
               <img src="/images/activity-1.jpg" alt="FPI Zambia Training" style={{ width: "100%", height: 280, objectFit: "cover", borderRadius: 20, boxShadow: "0 8px 24px rgba(0,0,0,0.1)" }} />
               <div style={{ position: "absolute", top: 16, left: 16, background: "linear-gradient(135deg,#2563EB,#EA580C)", color: "#fff", padding: "8px 14px", borderRadius: 14, textAlign: "center" }}>
-                <div style={{ fontFamily: "Georgia,serif", fontWeight: 800, fontSize: 22 }}>10+</div>
+                <div style={{ fontFamily: "Georgia,serif", fontWeight: 800, fontSize: 22 }}>{YEARS_OF_IMPACT}+</div>
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.85)" }}>Years of impact</div>
               </div>
             </motion.div>

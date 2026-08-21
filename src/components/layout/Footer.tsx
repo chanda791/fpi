@@ -2,6 +2,7 @@ import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "../../services/config";
+import { WhatsAppIcon, buildWhatsAppLink } from "../WhatsAppButton";
 
 const SERIF = "'Playfair Display', Georgia, serif";
 const SANS  = "'Inter', system-ui, sans-serif";
@@ -133,6 +134,15 @@ const Footer = () => {
   const [subEmail, setSubEmail] = useState("");
   const [subStatus, setSubStatus] = useState<string | null>(null);
   const [subbing, setSubbing] = useState(false);
+  const [whatsappHovered, setWhatsappHovered] = useState(false);
+  const [phone, setPhone] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/settings`)
+      .then((res) => res.json())
+      .then((data) => setPhone(data?.phone))
+      .catch((err) => console.error(err));
+  }, []);
 
   const handleSubscribe = async () => {
     if (!subEmail.trim() || !subEmail.includes("@")) {
@@ -382,28 +392,58 @@ const Footer = () => {
             </p>
           </div>
 
-          <Link
-            to="/contact"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: btnHovered ? 12 : 8,
-              background: btnHovered ? "#b02030" : RED,
-              color: "#fff",
-              padding: "0.65rem 1.25rem",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              textDecoration: "none",
-              width: "fit-content",
-              transform: btnHovered ? "translateY(-2px)" : "translateY(0)",
-              transition: "background .2s, transform .2s, gap .2s",
-            }}
-            onMouseEnter={() => setBtnHovered(true)}
-            onMouseLeave={() => setBtnHovered(false)}
-          >
-            Contact us <ArrowRight size={13} />
-          </Link>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
+            <Link
+              to="/contact"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: btnHovered ? 12 : 8,
+                background: btnHovered ? "#b02030" : RED,
+                color: "#fff",
+                padding: "0.65rem 1.25rem",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: "none",
+                width: "fit-content",
+                transform: btnHovered ? "translateY(-2px)" : "translateY(0)",
+                transition: "background .2s, transform .2s, gap .2s",
+              }}
+              onMouseEnter={() => setBtnHovered(true)}
+              onMouseLeave={() => setBtnHovered(false)}
+            >
+              Contact us <ArrowRight size={13} />
+            </Link>
+
+            {phone && (
+              <a
+                href={buildWhatsAppLink(phone, "Hello! I'd like to know more about FPI Zambia.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Chat with us on WhatsApp"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: whatsappHovered ? 12 : 8,
+                  background: whatsappHovered ? "#1ebc59" : "#25D366",
+                  color: "#fff",
+                  padding: "0.65rem 1.25rem",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  width: "fit-content",
+                  transform: whatsappHovered ? "translateY(-2px)" : "translateY(0)",
+                  transition: "background .2s, transform .2s, gap .2s",
+                }}
+                onMouseEnter={() => setWhatsappHovered(true)}
+                onMouseLeave={() => setWhatsappHovered(false)}
+              >
+                <WhatsAppIcon size={14} /> WhatsApp
+              </a>
+            )}
+          </div>
         </div>
       </section>
 
