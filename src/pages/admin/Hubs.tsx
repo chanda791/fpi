@@ -60,10 +60,17 @@ const Hubs = () => {
   if (!confirmDelete) return;
 
   try {
+    const token =
+      localStorage.getItem("fpi_admin_token") ||
+      sessionStorage.getItem("fpi_admin_token");
+
     await fetch(
       `${API_BASE_URL}/hubs/${id}`,
       {
         method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       }
     );
 

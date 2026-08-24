@@ -58,12 +58,17 @@ const CreateHub = () => {
     setLoading(true);
 
     try {
+      const token =
+        localStorage.getItem("fpi_admin_token") ||
+        sessionStorage.getItem("fpi_admin_token");
+
       const response = await fetch(
         `${API_BASE_URL}/hubs`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             ...formData,
