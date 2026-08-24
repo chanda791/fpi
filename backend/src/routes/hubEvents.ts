@@ -69,19 +69,23 @@ router.put("/:id", async (req, res) => {
       eventType,
       eventDate,
       hubId,
+      completed,
     } = req.body;
+
+    const data: Record<string, unknown> = {};
+
+    if (title !== undefined) data.title = title;
+    if (description !== undefined) data.description = description;
+    if (eventType !== undefined) data.eventType = eventType;
+    if (eventDate !== undefined) data.eventDate = new Date(eventDate);
+    if (hubId !== undefined) data.hubId = hubId;
+    if (completed !== undefined) data.completed = completed;
 
     const event = await prisma.hubEvent.update({
       where: {
         id: Number(req.params.id),
       },
-      data: {
-        title,
-        description,
-        eventType,
-        eventDate: new Date(eventDate),
-        hubId,
-      },
+      data,
     });
 
     res.json(event);

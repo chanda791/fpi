@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import { Calendar, Image, BookOpen, HandHeart, Clock, Award, MapPin, Users, UserCheck } from "lucide-react";
+import { Calendar, Image, BookOpen, HandHeart, Clock, Award, MapPin, Users, UserCheck, CheckCircle2 } from "lucide-react";
 import { API_BASE_URL, getAssetUrl } from "../../../services/config";
 import BackButton from "../../../components/BackButton";
 
@@ -228,7 +228,9 @@ const HubDetail = () => {
                   <p className="text-xs sm:text-sm text-gray-300 mt-1">Community Members</p>
                 </div>
                 <div>
-                  <div className="text-3xl sm:text-4xl font-bold text-[#E8610A]">{hub.events?.length || 0}</div>
+                  <div className="text-3xl sm:text-4xl font-bold text-[#E8610A]">
+                    {hub.events?.filter((e: any) => !e.completed).length || 0}
+                  </div>
                   <p className="text-xs sm:text-sm text-gray-300 mt-1">Upcoming Activities</p>
                 </div>
                 <div>
@@ -245,35 +247,73 @@ const HubDetail = () => {
             </div>
           </Reveal>
 
-          {/* ══ Events / Activities Section — unchanged condition, restyled ══ */}
-          {hub.events && hub.events.length > 0 && (
-            <Reveal>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-                <h2 className="hub-font-display text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-3 text-gray-900">
-                  <Calendar className="text-[#C9293A]" /> Upcoming Activities
-                </h2>
-                <div className="space-y-4">
-                  {hub.events.map((event: any) => (
-                    <div
-                      key={event.id}
-                      className="border-l-4 border-[#C9293A] pl-4 py-2 hover:bg-gray-50 transition rounded-r-lg"
-                    >
-                      <h4 className="font-bold text-lg">{event.title}</h4>
-                      {event.eventDate && (
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                          <Clock size={14} /> {new Date(event.eventDate).toLocaleDateString()}
-                          {event.eventType && ` · ${event.eventType}`}
-                        </p>
-                      )}
-                      {event.description && (
-                        <p className="text-gray-600 mt-1">{event.description}</p>
-                      )}
+          {/* ══ Events / Activities Section — split into upcoming vs completed ══ */}
+          {hub.events && hub.events.length > 0 && (() => {
+            const upcomingEvents = hub.events.filter((event: any) => !event.completed);
+            const completedEvents = hub.events.filter((event: any) => event.completed);
+
+            return (
+              <>
+                {upcomingEvents.length > 0 && (
+                  <Reveal>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+                      <h2 className="hub-font-display text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+                        <Calendar className="text-[#C9293A]" /> Upcoming Activities
+                      </h2>
+                      <div className="space-y-4">
+                        {upcomingEvents.map((event: any) => (
+                          <div
+                            key={event.id}
+                            className="border-l-4 border-[#C9293A] pl-4 py-2 hover:bg-gray-50 transition rounded-r-lg"
+                          >
+                            <h4 className="font-bold text-lg">{event.title}</h4>
+                            {event.eventDate && (
+                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                                <Clock size={14} /> {new Date(event.eventDate).toLocaleDateString()}
+                                {event.eventType && ` · ${event.eventType}`}
+                              </p>
+                            )}
+                            {event.description && (
+                              <p className="text-gray-600 mt-1">{event.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          )}
+                  </Reveal>
+                )}
+
+                {completedEvents.length > 0 && (
+                  <Reveal>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+                      <h2 className="hub-font-display text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+                        <CheckCircle2 className="text-green-600" /> Past Activities
+                      </h2>
+                      <div className="space-y-4">
+                        {completedEvents.map((event: any) => (
+                          <div
+                            key={event.id}
+                            className="border-l-4 border-gray-300 pl-4 py-2 hover:bg-gray-50 transition rounded-r-lg"
+                          >
+                            <h4 className="font-bold text-lg text-gray-700">{event.title}</h4>
+                            {event.eventDate && (
+                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                                <Clock size={14} /> {new Date(event.eventDate).toLocaleDateString()}
+                                {event.eventType && ` · ${event.eventType}`}
+                              </p>
+                            )}
+                            {event.description && (
+                              <p className="text-gray-600 mt-1">{event.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Reveal>
+                )}
+              </>
+            );
+          })()}
 
           {/* ══ Photo Gallery — slideshow ══ */}
           {hub.photos && hub.photos.length > 0 && (

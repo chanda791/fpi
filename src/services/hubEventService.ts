@@ -6,6 +6,7 @@ export interface HubEvent {
   description?: string;
   eventType: "Training" | "Community";
   eventDate: string;
+  completed?: boolean;
   hubId: number;
   hub?: { id: number; name: string };
 }

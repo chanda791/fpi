@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X, CalendarClock } from "lucide-react";
+import { Plus, Pencil, Trash2, X, CalendarClock, CheckCircle2, RotateCcw } from "lucide-react";
 
 import AdminLayout from "../../components/admin/AdminLayout";
 import PageHeader from "../../components/admin/PageHeader";
@@ -110,6 +110,16 @@ const HubEvents = () => {
     }
   };
 
+  const toggleCompleted = async (item: HubEvent) => {
+    try {
+      await hubEventService.update(item.id, { completed: !item.completed });
+      await load();
+    } catch (e) {
+      console.error(e);
+      alert("Unable to update event status.");
+    }
+  };
+
   return (
     <AdminLayout>
       <PageHeader
@@ -196,6 +206,26 @@ const HubEvents = () => {
                   </p>
                 </div>
                 <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full shrink-0">{item.eventType}</span>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full shrink-0 ${
+                    item.completed
+                      ? "bg-green-100 text-green-700"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
+                >
+                  {item.completed ? "Completed" : "Upcoming"}
+                </span>
+                <button
+                  onClick={() => toggleCompleted(item)}
+                  title={item.completed ? "Mark as Upcoming" : "Mark as Complete"}
+                  className={`p-2 rounded-lg ${
+                    item.completed
+                      ? "bg-slate-100 text-slate-600"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {item.completed ? <RotateCcw size={16} /> : <CheckCircle2 size={16} />}
+                </button>
                 <button onClick={() => openEdit(item)} className="p-2 rounded-lg bg-amber-100 text-amber-700"><Pencil size={16} /></button>
                 <button onClick={() => remove(item)} className="p-2 rounded-lg bg-red-100 text-red-700"><Trash2 size={16} /></button>
               </div>

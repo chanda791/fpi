@@ -172,6 +172,8 @@ model HubEvent {
 
   eventDate   DateTime
 
+  completed   Boolean  @default(false)
+
   hubId       Int
   hub         Hub @relation(fields: [hubId], references: [id])
 
