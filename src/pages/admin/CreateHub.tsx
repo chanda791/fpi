@@ -55,6 +55,16 @@ const CreateHub = () => {
   ) => {
     e.preventDefault();
 
+    if (
+      !formData.name ||
+      !formData.slug ||
+      !formData.location ||
+      !formData.provinceId
+    ) {
+      alert("Please complete all required fields (name, slug, location, province).");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -81,9 +91,16 @@ const CreateHub = () => {
 
       if (response.ok) {
         navigate("/admin/hubs");
+      } else {
+        const err = await response.json().catch(() => null);
+        alert(
+          err?.message ||
+            `Failed to create hub (${response.status}). The slug may already be in use.`
+        );
       }
     } catch (error) {
       console.error(error);
+      alert("Failed to create hub. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
