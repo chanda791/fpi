@@ -71,8 +71,15 @@ router.post("/", async (req, res) => {
     });
 
     res.status(201).json(hub);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "A hub with that slug already exists. Please choose a different slug.",
+      });
+    }
+
     res.status(500).json({
       message: "Failed to create hub",
     });
