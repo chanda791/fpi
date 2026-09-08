@@ -30,6 +30,7 @@ import programsContentRoutes from "./routes/programs";
 import { requireAuthForMutations } from "./middleware/auth";
 import { uploadPath } from "./middleware/upload";
 import hubEventRoutes from "./routes/hubEvents";
+import sitemapRoutes from "./routes/sitemap";
 
 
 const app = express();
@@ -62,6 +63,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use("/", sitemapRoutes);
 app.use("/api/auth", authRoutes);
 
 // Public-writable routes MUST be registered before the mutation-auth gate,
